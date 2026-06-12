@@ -1,0 +1,14 @@
+# Ren'Py が生成するファイル
+*.rpyc
+*.rpyb
+*.rpymc
+renpy/AmeNoOwariNi/game/cache/
+renpy/AmeNoOwariNi/game/saves/
+renpy/AmeNoOwariNi/log.txt
+renpy/AmeNoOwariNi/traceback.txt
+renpy/AmeNoOwariNi/errors.txt
+renpy/AmeNoOwariNi/tmp/
+
+# OS
+Thumbs.db
+desktop.ini

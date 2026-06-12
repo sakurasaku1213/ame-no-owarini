@@ -34,3 +34,36 @@
 
 - `?dbg=quiz` … 中間推理クイズから開始
 - `?dbg=trial` … 終盤の尋問パートから開始
+
+---
+
+# Ren'Py版（renpy/AmeNoOwariNi）
+
+同じゲームを **Ren'Py 8.5** に移植した開発用プロジェクト。今後のADV開発のベースに使う。
+
+## 起動方法
+
+- **すぐ遊ぶ**: リポジトリ直下の `play_renpy.bat` をダブルクリック
+- **開発する**: `C:\Users\user\Downloads\renpy-sdk\renpy.exe`（ランチャー）を起動し、
+  プロジェクトディレクトリに `C:\Users\user\Downloads\ame-no-owarini\renpy` を指定すると
+  「AmeNoOwariNi」が一覧に出る。スクリプトを編集したら Shift+R で再読込できる
+
+## ファイル構成（game/ 以下）
+
+| ファイル | 内容 |
+|---|---|
+| `options.rpy` | 解像度・音量・チャンネル登録などの基本設定 |
+| `defs.rpy` | 登場人物・証拠データ・画像/transform定義・ヘルパー関数 |
+| `screens.rpy` | say/choiceなど基本画面＋探偵手帳・尋問UI・タイトル等の全カスタム画面 |
+| `rain.rpy` | 雨エフェクト（カスタムdisplayable。雨脚3層・ガラスの雫・跳ね返り・稲光） |
+| `script.rpy` | オープニング〜調査パート〜中間推理 |
+| `trial.rpy` | 尋問エンジン・証言データ・自白〜エピローグ |
+| `images/` | 背景・人物・アイコン（HTML版のSVGからPNG化） |
+| `audio/` | BGM・効果音・雨音・雷鳴（`tools/gen_audio.js` で合成生成） |
+| `fonts/ipaexm.ttf` | IPAex明朝（IPAフォントライセンス） |
+
+## メモ
+
+- GUIテンプレートは使わず、必要な画面だけを自前定義している（学習用に読みやすい構成）
+- セーブ/ロードUIは未実装（約10分のゲームなので不要。読み返しはマウスホイール）
+- 構文チェックは `renpy-sdk\lib\py3-windows-x86_64\python.exe renpy-sdk\renpy.py <プロジェクト> lint`
