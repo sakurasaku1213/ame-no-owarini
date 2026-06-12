@@ -22,6 +22,7 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
  border:1px solid #2a3349; border-radius:6px 6px 0 0; overflow:hidden}
 #bg{position:absolute; inset:0}
 #bg svg{width:100%; height:100%; display:block}
+#raincv{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
 #bust{position:absolute; left:50%; bottom:-2px; transform:translateX(-50%); height:90%;
  opacity:0; transition:opacity .22s}
 #bust.on{opacity:1}
@@ -99,6 +100,7 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
  </div>
  <div id="stage">
   <div id="bg"></div>
+  <canvas id="raincv"></canvas>
   <div id="bust"></div>
   <div id="clicker"></div>
   <div id="itemget"><div class="igIcon"></div><div class="igName"></div><div class="igDesc"></div></div>
@@ -172,6 +174,7 @@ function sfxSlam(){
 /* 雨音 */
 let rainGain=null;
 function setRain(on,fade){
+ rainVisual(on,fade);
  if(!AC) return;
  const a=AC;
  if(!rainGain){
@@ -186,6 +189,31 @@ function setRain(on,fade){
  rainGain.gain.cancelScheduledValues(t);
  rainGain.gain.setValueAtTime(rainGain.gain.value,t);
  rainGain.gain.linearRampToValueAtTime(on?.045:0, t+(fade||1.2));
+}
+/* 突風（雨音の強弱ゆらぎ） */
+setInterval(()=>{
+ if(!S.sound||!AC||!rainGain) return;
+ if(rain.tgt<=0||rainGain.gain.value<=0.001) return;
+ const t=AC.currentTime, v=.03+Math.random()*.026;
+ rainGain.gain.cancelScheduledValues(t);
+ rainGain.gain.setValueAtTime(rainGain.gain.value,t);
+ rainGain.gain.linearRampToValueAtTime(v,t+2.4);
+},3000);
+/* 雷鳴 */
+function thunder(delay){
+ if(!S.sound||!AC) return;
+ const a=AC, t0=a.currentTime+delay;
+ const nb=a.createBuffer(1,a.sampleRate*3,a.sampleRate), ch=nb.getChannelData(0);
+ for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
+ const src=a.createBufferSource(); src.buffer=nb;
+ const lp=a.createBiquadFilter(); lp.type='lowpass';
+ lp.frequency.setValueAtTime(170,t0); lp.frequency.exponentialRampToValueAtTime(55,t0+2.6);
+ const g=a.createGain();
+ g.gain.setValueAtTime(.0001,t0);
+ g.gain.exponentialRampToValueAtTime(.26,t0+.18);
+ g.gain.exponentialRampToValueAtTime(.0001,t0+2.9);
+ src.connect(lp); lp.connect(g); g.connect(a.destination);
+ src.start(t0); src.stop(t0+3);
 }
 /* BGM（簡易シーケンサ） */
 const PAT={
@@ -215,19 +243,6 @@ setInterval(()=>{
  }
 },110);
 /* ========== 背景SVG ========== */
-function rainSVG(x,y,w,h,id){
- let lines='';
- for(let r=-1;r<h/46+1;r++){
-  const off=(r%2===0)?0:12;
-  for(let c=-1;c<w/24+1;c++){
-   const lx=x+c*24+off, ly=y+r*46;
-   lines+='<line x1="'+lx+'" y1="'+ly+'" x2="'+(lx-7)+'" y2="'+(ly+20)+'" stroke="#aac3e6" stroke-opacity=".32" stroke-width="1.1"/>';
-  }
- }
- return '<clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"/></clipPath>'+
-  '<g clip-path="url(#'+id+')"><g>'+lines+
-  '<animateTransform attributeName="transform" type="translate" values="0 0;-12 46" dur="0.55s" repeatCount="indefinite"/></g></g>';
-}
 function books(x,y,n,h){
  const ws=[12,9,14,8,11,13,7,10,12,9,15,8,11,10,13,9];
  const cs=['#5a3b35','#3e4a5a','#5a523a','#46394f','#503a2c','#3a4a44'];
@@ -249,7 +264,6 @@ BGS.title=()=>{
  +'<rect x="254" y="172" width="3" height="3" fill="#e8c478"/><rect x="266" y="186" width="3" height="3" fill="#e8c478"/>'
  +'<rect x="424" y="166" width="3" height="3" fill="#e8c478"/><rect x="438" y="190" width="3" height="3" fill="#8ab0d8"/>'
  +'<rect x="452" y="174" width="3" height="3" fill="#e8c478"/><rect x="524" y="196" width="3" height="3" fill="#8ab0d8"/>'
- +rainSVG(140,28,480,216,'t_rc')
  +'<g>'+[0,1,2,3,4,5].map(i=>'<rect x="136" y="'+(32+i*19)+'" width="488" height="11" fill="#0b1120" opacity=".92"/>').join('')+'</g>'
  +'<circle cx="668" cy="240" r="80" fill="url(#t_lamp)"/>'
  +'<rect x="600" y="246" width="160" height="54" fill="#120d08"/>'
@@ -269,7 +283,6 @@ BGS.shosai=()=>{
  +'<rect x="36" y="36" width="178" height="158" fill="#0d1830" stroke="#3a3326" stroke-width="7"/>'
  +'<line x1="125" y1="36" x2="125" y2="194" stroke="#3a3326" stroke-width="5"/>'
  +'<line x1="36" y1="115" x2="214" y2="115" stroke="#3a3326" stroke-width="5"/>'
- +rainSVG(40,40,170,150,'s_rc')
  +'<rect x="20" y="28" width="14" height="176" fill="#41304a"/><rect x="216" y="28" width="14" height="176" fill="#41304a"/>'
  +'<rect x="464" y="26" width="262" height="186" fill="#241b10" stroke="#0e0a06" stroke-width="3"/>'
  +books(474,40,15,42)+books(474,102,15,42)+books(474,164,15,40)
@@ -301,7 +314,6 @@ BGS.ima=()=>{
  +'<line x1="0" y1="214" x2="760" y2="214" stroke="#100c08" stroke-width="2"/>'
  +'<rect x="560" y="38" width="152" height="134" fill="#0d1830" stroke="#3a3326" stroke-width="6"/>'
  +'<line x1="636" y1="38" x2="636" y2="172" stroke="#3a3326" stroke-width="4"/>'
- +rainSVG(563,41,146,128,'i_rc')
  +'<path d="M544 28 q20 80 0 152 l-18 0 q14 -76 0 -152 Z" fill="#533648"/>'
  +'<path d="M716 28 q-20 80 0 152 l18 0 q-14 -76 0 -152 Z" fill="#533648"/>'
  +'<rect x="252" y="62" width="78" height="56" fill="#3a3024" stroke="#191309" stroke-width="3"/>'
@@ -332,7 +344,6 @@ BGS.dai=()=>{
  +'<line x1="200" y1="40" x2="200" y2="106" stroke="#15181c" stroke-width="3"/>'
  +'<circle cx="188" cy="74" r="3" fill="#9aa3ad"/><circle cx="212" cy="74" r="3" fill="#9aa3ad"/>'
  +'<rect x="592" y="46" width="98" height="86" fill="#0d1830" stroke="#3a3326" stroke-width="6"/>'
- +rainSVG(595,49,92,80,'d_rc')
  +'<rect x="36" y="178" width="690" height="16" fill="#7a8088"/>'
  +'<rect x="40" y="194" width="682" height="92" fill="#4a4f55"/>'
  +'<line x1="220" y1="194" x2="220" y2="286" stroke="#33373c" stroke-width="3"/>'
@@ -348,6 +359,164 @@ BGS.dai=()=>{
  +'<rect x="84" y="180" width="80" height="6" fill="#2a2e33"/>'
  +'<rect width="760" height="300" fill="url(#d_vg)"/></svg>';
 };
+/* ========== リアル雨エフェクト（Canvas） ========== */
+const raincv=document.getElementById('raincv'), rctx=raincv.getContext('2d');
+const RAINCFG={
+ title:{spawn:[140,28,480,216], sill:244, bolt:true,
+  clips:[[140,28,480,4],[140,43,480,8],[140,62,480,8],[140,81,480,8],[140,100,480,8],[140,119,480,8],[140,138,480,106]],
+  glass:[[140,150,480,94]]},
+ shosai:{spawn:[40,40,170,150], sill:190,
+  clips:[[40,40,83,73],[128,40,82,73],[40,118,83,72],[128,118,82,72]],
+  glass:[[40,40,83,73],[128,40,82,73],[40,118,83,72],[128,118,82,72]]},
+ ima:{spawn:[563,41,146,128], sill:169,
+  clips:[[563,41,71,128],[640,41,69,128]],
+  glass:[[563,41,71,128],[640,41,69,128]]},
+ dai:{spawn:[595,49,92,80], sill:129,
+  clips:[[595,49,92,80]], glass:[[595,49,92,80]]}
+};
+const rain={lvl:1, tgt:1, fadeS:1.2, cfg:null, st:[], dr:[], sp:[], run:false, t:0, last:0, wind:-26, nextBolt:6, boltT:9};
+function rainSize(){
+ const r=stage.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,1.25);
+ raincv.width=Math.max(2,Math.round(r.width*dpr));
+ raincv.height=Math.max(2,Math.round(r.height*dpr));
+}
+window.addEventListener('resize',rainSize);
+if(window.ResizeObserver) new ResizeObserver(rainSize).observe(stage);
+function newStreak(c,init){
+ const r=Math.random(), layer=r<.45?0:(r<.8?1:2), sp=c.spawn;
+ return {layer,
+  x:sp[0]+Math.random()*sp[2],
+  y:init? sp[1]+Math.random()*sp[3] : sp[1]-20-Math.random()*60,
+  len:[10,17,28][layer]+Math.random()*[8,10,14][layer],
+  vy:[230,400,620][layer]*(0.85+Math.random()*.3),
+  a:[.13,.2,.34][layer]+Math.random()*.08,
+  w:[0.8,1,1.5][layer]};
+}
+function newDrop(c,init){
+ const g=c.glass[Math.floor(Math.random()*c.glass.length)];
+ return {g, x:g[0]+2+Math.random()*(g[2]-4),
+  y:init? g[1]+Math.random()*g[3] : g[1]+1+Math.random()*8,
+  r:1.3+Math.random()*2.1, vy:0, slide:0, wob:Math.random()*6.28, trail:[]};
+}
+function rainScene(id){
+ rain.cfg=RAINCFG[id]||null; rain.st=[]; rain.dr=[]; rain.sp=[];
+ rctx.setTransform(1,0,0,1,0,0); rctx.clearRect(0,0,raincv.width,raincv.height);
+ if(!rain.cfg) return;
+ rainSize();
+ const c=rain.cfg;
+ const n=Math.round(Math.min(160,Math.max(28,c.spawn[2]*c.spawn[3]/700)));
+ for(let i=0;i<n;i++) rain.st.push(newStreak(c,true));
+ const gA=c.glass.reduce((s,g)=>s+g[2]*g[3],0);
+ const nd=Math.round(Math.min(26,Math.max(7,gA/1400)));
+ for(let i=0;i<nd;i++) rain.dr.push(newDrop(c,true));
+ rain.nextBolt=rain.t+4+Math.random()*8;
+ rainRun();
+}
+function rainVisual(on,fade){
+ rain.tgt=on?1:0; rain.fadeS=fade||1.2;
+ if(on&&rain.lvl<=0) rain.lvl=.001;
+ rainRun();
+}
+function rainRun(){
+ if(rain.run||!rain.cfg) return;
+ if(rain.lvl<=0&&rain.tgt<=0) return;
+ rain.run=true; rain.last=performance.now();
+ requestAnimationFrame(rainFrame);
+}
+function rainFrame(now){
+ if(!rain.cfg){ rain.run=false; return; }
+ const dt=Math.min(.05,(now-rain.last)/1000); rain.last=now; rain.t+=dt;
+ if(rain.lvl<rain.tgt) rain.lvl=Math.min(rain.tgt,rain.lvl+dt/rain.fadeS);
+ else if(rain.lvl>rain.tgt) rain.lvl=Math.max(rain.tgt,rain.lvl-dt/rain.fadeS);
+ const c=rain.cfg, L=rain.lvl;
+ rain.wind=-22+Math.sin(rain.t*.5)*10+Math.sin(rain.t*.17)*14;
+ rctx.setTransform(raincv.width/760,0,0,raincv.height/300,0,0);
+ rctx.clearRect(0,0,760,300);
+ let bolt=0;
+ if(L>0.005){
+  if(c.bolt&&L>.4){
+   if(rain.t>rain.nextBolt){
+    rain.boltT=0; rain.nextBolt=rain.t+9+Math.random()*15;
+    thunder(.7+Math.random()*1.2);
+   }
+   rain.boltT+=dt;
+   const p=x=>x>=0?Math.exp(-x*16):0;
+   bolt=Math.min(.8,.55*p(rain.boltT)+.8*p(rain.boltT-.13)+.3*p(rain.boltT-.32));
+  }
+  rctx.save();
+  rctx.beginPath();
+  for(const r of c.clips) rctx.rect(r[0],r[1],r[2],r[3]);
+  rctx.clip();
+  if(bolt>0.012){
+   rctx.fillStyle='rgba(216,226,255,'+(bolt*.75)+')';
+   rctx.fillRect(c.spawn[0],c.spawn[1],c.spawn[2],c.spawn[3]);
+  }
+  rctx.lineCap='round';
+  for(const s of rain.st){
+   const vx=rain.wind*(.4+s.layer*.4), sp=c.spawn;
+   s.x+=vx*dt; s.y+=s.vy*dt;
+   if(s.x<sp[0]-10) s.x+=sp[2]+20;
+   if(s.x>sp[0]+sp[2]+10) s.x-=sp[2]+20;
+   if(s.y>sp[1]+sp[3]+6){
+    if(s.layer===2&&Math.random()<.4&&rain.sp.length<26) rain.sp.push({x:s.x,y:c.sill,t:0,life:.3});
+    Object.assign(s,newStreak(c,false));
+    continue;
+   }
+   const dx=vx/s.vy*s.len, a=Math.min(.6,s.a*L*(1+bolt*1.5));
+   if(s.layer===2){
+    const gr=rctx.createLinearGradient(s.x-dx,s.y-s.len,s.x,s.y);
+    gr.addColorStop(0,'rgba(190,210,245,0)');
+    gr.addColorStop(1,'rgba(200,218,250,'+a+')');
+    rctx.strokeStyle=gr;
+   }else rctx.strokeStyle='rgba(186,205,240,'+a+')';
+   rctx.lineWidth=s.w;
+   rctx.beginPath(); rctx.moveTo(s.x-dx,s.y-s.len); rctx.lineTo(s.x,s.y); rctx.stroke();
+  }
+  for(let i=rain.sp.length-1;i>=0;i--){
+   const p=rain.sp[i]; p.t+=dt;
+   if(p.t>p.life){ rain.sp.splice(i,1); continue; }
+   const k=p.t/p.life, a=(1-k)*.4*L;
+   rctx.fillStyle='rgba(200,218,250,'+a+')';
+   rctx.beginPath(); rctx.arc(p.x-k*9,p.y-k*7*(1-k),0.7,0,6.283); rctx.fill();
+   rctx.beginPath(); rctx.arc(p.x+k*11,p.y-k*9*(1-k),0.7,0,6.283); rctx.fill();
+  }
+  const dry=Math.pow(.45,dt);
+  for(const d of rain.dr){
+   if(d.slide>0){
+    d.vy=Math.min(34,d.vy+26*dt*d.r/2.4);
+    d.y+=d.vy*dt; d.wob+=dt*7; d.x+=Math.sin(d.wob)*.12;
+    d.slide-=dt;
+    if(!d.trail.length||d.y-d.trail[d.trail.length-1].y>2.2) d.trail.push({x:d.x,y:d.y,a:.3});
+    if(d.trail.length>16) d.trail.shift();
+   }else{
+    d.vy=0;
+    if(Math.random()<dt*(.06+d.r*.05)) d.slide=.4+Math.random()*1.4;
+   }
+   if(d.y>d.g[1]+d.g[3]+2){ Object.assign(d,newDrop(c,false)); continue; }
+   for(const t of d.trail) t.a*=dry;
+   d.trail=d.trail.filter(t=>t.a>.02);
+   for(const t of d.trail){
+    rctx.fillStyle='rgba(205,222,250,'+(t.a*L).toFixed(3)+')';
+    rctx.beginPath(); rctx.arc(t.x,t.y,d.r*.42,0,6.283); rctx.fill();
+   }
+   rctx.fillStyle='rgba(208,224,252,'+(.34*L).toFixed(3)+')';
+   rctx.beginPath(); rctx.arc(d.x,d.y,d.r,0,6.283); rctx.fill();
+   rctx.fillStyle='rgba(255,255,255,'+(.5*L).toFixed(3)+')';
+   rctx.beginPath(); rctx.arc(d.x-d.r*.3,d.y-d.r*.35,d.r*.32,0,6.283); rctx.fill();
+  }
+  rctx.restore();
+  if(bolt>0.012){
+   rctx.fillStyle='rgba(210,222,255,'+(bolt*.1)+')';
+   rctx.fillRect(0,0,760,300);
+  }
+ }
+ if(rain.lvl<=0.005&&rain.tgt===0){
+  rctx.clearRect(0,0,760,300);
+  rain.run=false; return;
+ }
+ if(window.__noLoop){ rain.run=false; return; }
+ requestAnimationFrame(rainFrame);
+}
 /* ========== 人物バストアップSVG ========== */
 const BUSTS={};
 BUSTS.kumai='<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">'
@@ -495,7 +664,7 @@ function setBust(id){
  if(bustEl.dataset.cur!==id){ bustEl.innerHTML=BUSTS[id]; bustEl.dataset.cur=id; }
  bustEl.classList.add('on');
 }
-function setScene(id){ S.loc=id; bgEl.innerHTML=BGS[id](); setBust(null); }
+function setScene(id){ S.loc=id; bgEl.innerHTML=BGS[id](); setBust(null); rainScene(id); }
 async function say(who,text){
  const c=CH[who]||{};
  if(c.name){ nameEl.textContent=c.name; nameEl.style.color=c.color||'#e8e3d3'; nameEl.style.display='inline-block'; }
