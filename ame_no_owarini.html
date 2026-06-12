@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雨の終わりに ― 私立探偵・灰崎の事件簿 ―</title>
+<style>
+:root{ --ink:#e8e3d3; --gold:#d9b36a; --navy:#0d1321; }
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:#06080f; color:var(--ink);
+ font-family:"Yu Mincho","YuMincho","Hiragino Mincho ProN","MS PMincho",serif;
+ display:flex; justify-content:center; align-items:center; min-height:100vh; padding:8px}
+#game{width:min(96vw,780px); user-select:none}
+#hdr{display:flex; align-items:center; gap:10px; padding:4px 4px 6px; font-size:13px; color:#8b94a8; letter-spacing:.12em}
+#hdr .sp{flex:1}
+#lives{letter-spacing:4px; color:#d96a6a; display:none; font-size:15px}
+button{font-family:inherit; background:#141b2c; color:var(--ink); border:1px solid #3a4663;
+ border-radius:4px; padding:7px 14px; font-size:15px; cursor:pointer; letter-spacing:.08em}
+button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
+.hbtn{padding:3px 10px; font-size:12.5px}
+#stage{position:relative; width:100%; aspect-ratio:760/300; background:#000;
+ border:1px solid #2a3349; border-radius:6px 6px 0 0; overflow:hidden}
+#bg{position:absolute; inset:0}
+#bg svg{width:100%; height:100%; display:block}
+#bust{position:absolute; left:50%; bottom:-2px; transform:translateX(-50%); height:90%;
+ opacity:0; transition:opacity .22s}
+#bust.on{opacity:1}
+#bust svg{height:100%; display:block; filter:drop-shadow(0 0 18px rgba(0,0,0,.55))}
+#clicker{position:absolute; inset:0; z-index:15; display:none; cursor:pointer}
+#itemget{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:18;
+ display:none; pointer-events:none; background:rgba(10,14,24,.95); border:1px solid var(--gold);
+ border-radius:8px; padding:14px 22px; text-align:center; max-width:78%;
+ box-shadow:0 0 30px rgba(217,179,106,.25)}
+#itemget .igIcon{width:46px; height:46px; margin:0 auto 6px}
+#itemget .igIcon svg{width:100%; height:100%}
+#itemget .igName{color:var(--gold); font-size:16px; letter-spacing:.15em; margin-bottom:4px}
+#itemget .igDesc{font-size:12.5px; color:#c9cfdd; line-height:1.7}
+#choice{position:absolute; left:50%; bottom:8px; transform:translateX(-50%); display:none;
+ flex-direction:column; gap:5px; z-index:20; min-width:48%; max-width:92%}
+#choice button{background:rgba(11,16,29,.95); font-size:14.5px; padding:5px 16px; text-align:left}
+#flash{position:absolute; inset:0; background:#f3ecd8; display:none; align-items:center;
+ justify-content:center; z-index:30}
+#flash span{font-size:52px; font-weight:bold; color:#15182a; letter-spacing:.18em;
+ text-shadow:3px 3px 0 rgba(180,60,50,.45)}
+#title,#endscr{position:absolute; inset:0; z-index:40; display:none; flex-direction:column;
+ align-items:center; justify-content:center; gap:10px; text-align:center;
+ background:rgba(4,6,12,.35)}
+#title h1{font-size:40px; letter-spacing:.3em; text-indent:.3em; color:#f0e8d4;
+ text-shadow:0 0 18px rgba(120,160,220,.35); font-weight:600}
+#title .sub{font-size:13px; color:#9aa6bd; letter-spacing:.3em}
+#title .note{font-size:11.5px; color:#6b7690; letter-spacing:.15em}
+#title button{margin-top:8px; padding:9px 36px; font-size:16px}
+#endscr h1{font-size:64px; letter-spacing:.2em; color:#e8e0c8}
+#endscr .sub{font-size:14px; color:#9aa6bd; letter-spacing:.35em}
+.shake{animation:shk .35s}
+@keyframes shk{0%,100%{transform:translate(0,0)}20%{transform:translate(-8px,3px)}
+ 40%{transform:translate(7px,-4px)}60%{transform:translate(-5px,2px)}80%{transform:translate(4px,-2px)}}
+#msg{position:relative; background:rgba(10,14,26,.97); border:1px solid #4a5878;
+ border-top:1px solid #36415e; border-radius:0 0 6px 6px; min-height:122px;
+ padding:16px 20px 14px; font-size:16.5px; line-height:1.9}
+#name{position:absolute; top:-13px; left:14px; background:#0d1321; border:1px solid #4a5878;
+ padding:1px 14px; font-size:13.5px; letter-spacing:.2em; display:none}
+#cursor{position:absolute; right:14px; bottom:6px; color:var(--gold); display:none;
+ animation:blnk 1s steps(2) infinite; font-size:14px}
+@keyframes blnk{50%{opacity:0}}
+#bar{display:flex; gap:8px; padding:10px 2px 2px; flex-wrap:wrap; min-height:52px}
+#bar button{font-size:14.5px; padding:7px 16px}
+#modal{position:fixed; inset:0; background:rgba(0,0,0,.72); display:none;
+ align-items:center; justify-content:center; z-index:50}
+#nb{width:min(92vw,620px); max-height:86vh; overflow:auto; background:#11182a;
+ border:1px solid #5a6a8c; border-radius:8px; padding:14px 16px}
+#nbHead{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+#nbHead b{color:var(--gold); letter-spacing:.2em; font-size:15px}
+#nbPrompt{font-size:12.5px; color:#d98c6a; flex:1}
+.evgrid{display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px}
+.evitem{display:flex; gap:9px; align-items:center; border:1px solid #2e3a55; border-radius:6px;
+ padding:6px 8px; cursor:pointer; background:#0d1321; font-size:13.5px}
+.evitem:hover{border-color:var(--gold)}
+.evitem.sel{border-color:var(--gold); background:#1a2238}
+.evicon{width:34px; height:34px; flex:none}
+.evicon svg{width:100%; height:100%}
+#evdetail{display:none; gap:12px; border-top:1px solid #2e3a55; padding-top:10px}
+#evdIcon{width:54px; height:54px; flex:none}
+#evdIcon svg{width:100%; height:100%}
+#evdName{color:var(--gold); font-size:15px; letter-spacing:.12em; margin-bottom:4px}
+#evdDesc{font-size:13px; line-height:1.8; color:#ccd3e2; white-space:pre-line}
+#evdUse{display:none; margin-top:8px; border-color:#a85a4a; color:#f0c8b0}
+@media (max-width:520px){ #title h1{font-size:30px} #msg{font-size:15px} }
+</style>
+</head>
+<body>
+<div id="game">
+ <div id="hdr">
+  <span>雨の終わりに ― 私立探偵・灰崎の事件簿 ―</span>
+  <span class="sp"></span>
+  <span id="lives"></span>
+  <button class="hbtn" id="hdrNb">手帳</button>
+  <button class="hbtn" id="hdrSnd">音：オン</button>
+ </div>
+ <div id="stage">
+  <div id="bg"></div>
+  <div id="bust"></div>
+  <div id="clicker"></div>
+  <div id="itemget"><div class="igIcon"></div><div class="igName"></div><div class="igDesc"></div></div>
+  <div id="choice"></div>
+  <div id="flash"><span></span></div>
+  <div id="title">
+   <div class="sub">― 私立探偵・灰崎の事件簿 ―</div>
+   <h1>雨の終わりに</h1>
+   <div class="note">クリック／Enterで読み進める　＊プレイ時間 約10分</div>
+   <button id="btnStart">調査をはじめる</button>
+  </div>
+  <div id="endscr">
+   <h1>完</h1>
+   <div class="sub">― 雨の終わりに ―</div>
+   <button id="btnAgain">もう一度はじめから</button>
+  </div>
+ </div>
+ <div id="msg">
+  <span id="name"></span>
+  <div id="txt"></div>
+  <span id="cursor">▼</span>
+ </div>
+ <div id="bar"></div>
+</div>
+<div id="modal"><div id="nb">
+ <div id="nbHead"><b>探偵手帳</b><span id="nbPrompt"></span><button class="hbtn" id="nbClose">閉じる</button></div>
+ <div class="evgrid" id="evgrid"></div>
+ <div id="evdetail"><div id="evdIcon"></div><div style="flex:1">
+  <div id="evdName"></div><div id="evdDesc"></div><button id="evdUse">これをつきつける！</button>
+ </div></div>
+</div></div>
+<script>
+'use strict';
+/* ========== 基本ユーティリティ ========== */
+const el=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const stage=el('stage'), bgEl=el('bg'), bustEl=el('bust'), clicker=el('clicker'),
+ txtEl=el('txt'), nameEl=el('name'), curEl=el('cursor'), barEl=el('bar'),
+ choiceEl=el('choice'), flashEl=el('flash'), modal=el('modal'), ig=el('itemget'),
+ livesEl=el('lives');
+
+/* ========== 音 ========== */
+let AC=null;
+function ac(){ if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)(); } return AC; }
+function tone(f,d,type,v,t0){
+ if(!S.sound||!AC) return;
+ const a=AC; t0=(t0===undefined)?a.currentTime:t0;
+ const o=a.createOscillator(), g=a.createGain();
+ o.type=type||'square'; o.frequency.value=f;
+ g.gain.setValueAtTime(v||.08,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+ o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0+d+.03);
+}
+const blip=()=>tone(980,.03,'square',.016);
+const sfxSel=()=>tone(660,.06,'square',.05);
+const sfxDing=()=>{tone(880,.12,'sine',.07);tone(1318,.18,'sine',.05,ac().currentTime+.07);};
+const sfxBuzz=()=>{tone(110,.28,'sawtooth',.09);tone(104,.3,'sawtooth',.07);};
+function sfxSlam(){
+ if(!S.sound||!AC) return;
+ const a=AC, t=a.currentTime;
+ const o=a.createOscillator(), g=a.createGain();
+ o.type='sawtooth'; o.frequency.setValueAtTime(220,t);
+ o.frequency.exponentialRampToValueAtTime(50,t+.3);
+ g.gain.setValueAtTime(.22,t); g.gain.exponentialRampToValueAtTime(.0001,t+.32);
+ o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+.35);
+ const nb=a.createBuffer(1,a.sampleRate*.2,a.sampleRate), ch=nb.getChannelData(0);
+ for(let i=0;i<ch.length;i++) ch[i]=(Math.random()*2-1)*(1-i/ch.length);
+ const src=a.createBufferSource(); src.buffer=nb;
+ const ng=a.createGain(); ng.gain.value=.18;
+ src.connect(ng); ng.connect(a.destination); src.start(t);
+}
+/* 雨音 */
+let rainGain=null;
+function setRain(on,fade){
+ if(!AC) return;
+ const a=AC;
+ if(!rainGain){
+  const buf=a.createBuffer(1,a.sampleRate*2,a.sampleRate), ch=buf.getChannelData(0);
+  for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
+  const src=a.createBufferSource(); src.buffer=buf; src.loop=true;
+  const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
+  rainGain=a.createGain(); rainGain.gain.value=0;
+  src.connect(lp); lp.connect(rainGain); rainGain.connect(a.destination); src.start();
+ }
+ const t=a.currentTime;
+ rainGain.gain.cancelScheduledValues(t);
+ rainGain.gain.setValueAtTime(rainGain.gain.value,t);
+ rainGain.gain.linearRampToValueAtTime(on?.045:0, t+(fade||1.2));
+}
+/* BGM（簡易シーケンサ） */
+const PAT={
+ calm:{bpm:84,notes:[
+  [0,110,2,'triangle',.06],[4,98,2,'triangle',.06],[8,87.3,2,'triangle',.06],[12,82.4,2,'triangle',.06],
+  [2,220,1,'sine',.035],[6,261.6,.8,'sine',.03],[7,246.9,.8,'sine',.03],[10,196,1,'sine',.03],[14,164.8,1.5,'sine',.035]]},
+ tense:{bpm:126,notes:[
+  [0,110,.8,'square',.045],[2,110,.8,'square',.045],[4,110,.8,'square',.045],[6,116.5,.8,'square',.05],
+  [8,110,.8,'square',.045],[10,110,.8,'square',.045],[12,103.8,.8,'square',.05],[14,116.5,.8,'square',.05],
+  [3,466.2,.5,'sine',.025],[11,415.3,.5,'sine',.025]]},
+ sad:{bpm:66,notes:[
+  [0,110,.9,'sine',.05],[1,130.8,.9,'sine',.045],[2,164.8,.9,'sine',.045],[3,220,.9,'sine',.05],
+  [4,87.3,.9,'sine',.05],[5,110,.9,'sine',.045],[6,130.8,.9,'sine',.045],[7,174.6,.9,'sine',.05],
+  [8,98,.9,'sine',.05],[9,123.5,.9,'sine',.045],[10,146.8,.9,'sine',.045],[11,196,.9,'sine',.05],
+  [12,82.4,.9,'sine',.05],[13,103.8,.9,'sine',.045],[14,123.5,.9,'sine',.045],[15,164.8,.9,'sine',.05]]}
+};
+let bgmName=null, bgmStep=0, bgmNext=0;
+function setBGM(name){ bgmName=name; bgmStep=0; if(AC) bgmNext=AC.currentTime+.08; }
+setInterval(()=>{
+ if(!bgmName||!AC||!S.sound) return;
+ const p=PAT[bgmName], spb=60/p.bpm/2;
+ if(bgmNext<AC.currentTime) bgmNext=AC.currentTime+.05;
+ while(bgmNext<AC.currentTime+.32){
+  const si=bgmStep%16;
+  for(const n of p.notes) if(n[0]===si) tone(n[1],n[2]*spb*.95,n[3],n[4],bgmNext);
+  bgmStep++; bgmNext+=spb;
+ }
+},110);
+/* ========== 背景SVG ========== */
+function rainSVG(x,y,w,h,id){
+ let lines='';
+ for(let r=-1;r<h/46+1;r++){
+  const off=(r%2===0)?0:12;
+  for(let c=-1;c<w/24+1;c++){
+   const lx=x+c*24+off, ly=y+r*46;
+   lines+='<line x1="'+lx+'" y1="'+ly+'" x2="'+(lx-7)+'" y2="'+(ly+20)+'" stroke="#aac3e6" stroke-opacity=".32" stroke-width="1.1"/>';
+  }
+ }
+ return '<clipPath id="'+id+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"/></clipPath>'+
+  '<g clip-path="url(#'+id+')"><g>'+lines+
+  '<animateTransform attributeName="transform" type="translate" values="0 0;-12 46" dur="0.55s" repeatCount="indefinite"/></g></g>';
+}
+function books(x,y,n,h){
+ const ws=[12,9,14,8,11,13,7,10,12,9,15,8,11,10,13,9];
+ const cs=['#5a3b35','#3e4a5a','#5a523a','#46394f','#503a2c','#3a4a44'];
+ let s='',cx=x;
+ for(let i=0;i<n;i++){ const w=ws[i%ws.length], bh=h-(i*7%9);
+  s+='<rect x="'+cx+'" y="'+(y+(h-bh))+'" width="'+w+'" height="'+bh+'" fill="'+cs[i%cs.length]+'"/>'; cx+=w+2; }
+ return s;
+}
+const BGS={};
+BGS.title=()=>{
+ return '<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">'
+ +'<defs><radialGradient id="t_vg" cx="50%" cy="45%" r="75%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>'
+ +'<radialGradient id="t_lamp" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f4c873" stop-opacity=".5"/><stop offset="100%" stop-color="#f4c873" stop-opacity="0"/></radialGradient></defs>'
+ +'<rect width="760" height="300" fill="#0a0f1c"/>'
+ +'<rect x="140" y="28" width="480" height="216" fill="#0d1830" stroke="#1b2438" stroke-width="6"/>'
+ +'<rect x="170" y="190" width="40" height="54" fill="#060a14"/><rect x="240" y="160" width="60" height="84" fill="#081020"/>'
+ +'<rect x="330" y="200" width="46" height="44" fill="#060a14"/><rect x="410" y="150" width="70" height="94" fill="#081020"/>'
+ +'<rect x="510" y="185" width="52" height="59" fill="#060a14"/>'
+ +'<rect x="254" y="172" width="3" height="3" fill="#e8c478"/><rect x="266" y="186" width="3" height="3" fill="#e8c478"/>'
+ +'<rect x="424" y="166" width="3" height="3" fill="#e8c478"/><rect x="438" y="190" width="3" height="3" fill="#8ab0d8"/>'
+ +'<rect x="452" y="174" width="3" height="3" fill="#e8c478"/><rect x="524" y="196" width="3" height="3" fill="#8ab0d8"/>'
+ +rainSVG(140,28,480,216,'t_rc')
+ +'<g>'+[0,1,2,3,4,5].map(i=>'<rect x="136" y="'+(32+i*19)+'" width="488" height="11" fill="#0b1120" opacity=".92"/>').join('')+'</g>'
+ +'<circle cx="668" cy="240" r="80" fill="url(#t_lamp)"/>'
+ +'<rect x="600" y="246" width="160" height="54" fill="#120d08"/>'
+ +'<path d="M640 246 q4 -18 24 -18 q20 0 24 18 Z" fill="#1c1610"/><ellipse cx="664" cy="229" rx="13" ry="5" fill="#241c12"/>'
+ +'<path d="M700 240 q-6 -24 6 -38 q10 -12 4 -26" stroke="#9aa7bd" stroke-opacity=".4" fill="none" stroke-width="1.5"/>'
+ +'<rect width="760" height="300" fill="url(#t_vg)"/></svg>';
+};
+BGS.shosai=()=>{
+ return '<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">'
+ +'<defs><radialGradient id="s_vg" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".62"/></radialGradient>'
+ +'<radialGradient id="s_lamp" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f4c873" stop-opacity=".42"/><stop offset="100%" stop-color="#f4c873" stop-opacity="0"/></radialGradient></defs>'
+ +'<rect width="760" height="300" fill="#16131f"/>'
+ +'<rect y="208" width="760" height="92" fill="#241a12"/>'
+ +'<line x1="0" y1="208" x2="760" y2="208" stroke="#0e0a06" stroke-width="2"/>'
+ +'<line x1="120" y1="300" x2="180" y2="208" stroke="#16100a" stroke-width="1.5" opacity=".6"/>'
+ +'<line x1="620" y1="300" x2="570" y2="208" stroke="#16100a" stroke-width="1.5" opacity=".6"/>'
+ +'<rect x="36" y="36" width="178" height="158" fill="#0d1830" stroke="#3a3326" stroke-width="7"/>'
+ +'<line x1="125" y1="36" x2="125" y2="194" stroke="#3a3326" stroke-width="5"/>'
+ +'<line x1="36" y1="115" x2="214" y2="115" stroke="#3a3326" stroke-width="5"/>'
+ +rainSVG(40,40,170,150,'s_rc')
+ +'<rect x="20" y="28" width="14" height="176" fill="#41304a"/><rect x="216" y="28" width="14" height="176" fill="#41304a"/>'
+ +'<rect x="464" y="26" width="262" height="186" fill="#241b10" stroke="#0e0a06" stroke-width="3"/>'
+ +books(474,40,15,42)+books(474,102,15,42)+books(474,164,15,40)
+ +'<line x1="464" y1="94" x2="726" y2="94" stroke="#0e0a06" stroke-width="4"/>'
+ +'<line x1="464" y1="156" x2="726" y2="156" stroke="#0e0a06" stroke-width="4"/>'
+ +'<path d="M306 196 l86 0 l8 22 l-102 0 Z" fill="#1c1722"/>'
+ +'<circle cx="349" cy="172" r="26" fill="#1c1722"/>'
+ +'<circle cx="300" cy="170" r="58" fill="url(#s_lamp)"/>'
+ +'<rect x="236" y="206" width="252" height="14" fill="#3a2a1a"/><rect x="240" y="220" width="244" height="6" fill="#2a1d10"/>'
+ +'<rect x="248" y="226" width="12" height="62" fill="#2a1d10"/><rect x="464" y="226" width="12" height="62" fill="#2a1d10"/>'
+ +'<path d="M282 206 l-4 -12 q14 -10 30 0 l-4 12 Z" fill="#2e6b4f"/><rect x="292" y="178" width="4" height="18" fill="#1c2a24"/><rect x="284" y="176" width="20" height="5" fill="#2e6b4f"/>'
+ +'<rect x="318" y="198" width="34" height="8" fill="#ece6d2" transform="rotate(-4 335 202)"/>'
+ +'<rect x="356" y="199" width="30" height="7" fill="#ddd6c0" transform="rotate(3 371 202)"/>'
+ +'<ellipse cx="412" cy="201" rx="9" ry="4" fill="#d8d0bc"/><ellipse cx="412" cy="200" rx="6" ry="2.5" fill="#3a2a1c"/>'
+ +'<rect x="96" y="206" width="118" height="14" fill="#33261a"/><rect x="104" y="220" width="10" height="56" fill="#241a10"/><rect x="196" y="220" width="10" height="56" fill="#241a10"/>'
+ +'<rect x="116" y="178" width="84" height="30" fill="#6a7077"/><rect x="122" y="183" width="42" height="18" fill="#1c2a24"/>'
+ +'<line x1="126" y1="189" x2="158" y2="189" stroke="#7adfa0" stroke-width="1.4" opacity=".8"/>'
+ +'<line x1="126" y1="195" x2="148" y2="195" stroke="#7adfa0" stroke-width="1.4" opacity=".5"/>'
+ +'<g stroke="#454b52" stroke-width="1.4">'+[0,1,2,3].map(i=>'<line x1="168" y1="'+(184+i*5)+'" x2="196" y2="'+(184+i*5)+'"/>').join('')+'</g>'
+ +'<ellipse cx="360" cy="272" rx="170" ry="20" fill="#3a2430" opacity=".55"/>'
+ +'<rect width="760" height="300" fill="url(#s_vg)"/></svg>';
+};
+BGS.ima=()=>{
+ return '<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">'
+ +'<defs><radialGradient id="i_vg" cx="50%" cy="45%" r="75%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>'
+ +'<radialGradient id="i_lamp" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f0bd76" stop-opacity=".4"/><stop offset="100%" stop-color="#f0bd76" stop-opacity="0"/></radialGradient></defs>'
+ +'<rect width="760" height="300" fill="#1f1b29"/>'
+ +'<rect y="214" width="760" height="86" fill="#2a2017"/>'
+ +'<line x1="0" y1="214" x2="760" y2="214" stroke="#100c08" stroke-width="2"/>'
+ +'<rect x="560" y="38" width="152" height="134" fill="#0d1830" stroke="#3a3326" stroke-width="6"/>'
+ +'<line x1="636" y1="38" x2="636" y2="172" stroke="#3a3326" stroke-width="4"/>'
+ +rainSVG(563,41,146,128,'i_rc')
+ +'<path d="M544 28 q20 80 0 152 l-18 0 q14 -76 0 -152 Z" fill="#533648"/>'
+ +'<path d="M716 28 q-20 80 0 152 l18 0 q-14 -76 0 -152 Z" fill="#533648"/>'
+ +'<rect x="252" y="62" width="78" height="56" fill="#3a3024" stroke="#191309" stroke-width="3"/>'
+ +'<path d="M258 108 l22 -26 l16 14 l12 -20 l16 32 Z" fill="#23304a"/><circle cx="312" cy="78" r="6" fill="#cfc4a0" opacity=".7"/>'
+ +'<rect x="52" y="148" width="190" height="64" rx="10" fill="#41514a"/>'
+ +'<rect x="62" y="190" width="174" height="44" rx="8" fill="#36443e"/>'
+ +'<rect x="72" y="160" width="70" height="34" rx="7" fill="#586b60"/><rect x="152" y="160" width="70" height="34" rx="7" fill="#586b60"/>'
+ +'<rect x="300" y="208" width="186" height="12" rx="3" fill="#2e2218"/>'
+ +'<rect x="312" y="220" width="10" height="34" fill="#211810"/><rect x="464" y="220" width="10" height="34" fill="#211810"/>'
+ +'<ellipse cx="346" cy="204" rx="8" ry="4" fill="#d8d0bc"/><ellipse cx="392" cy="204" rx="8" ry="4" fill="#d8d0bc"/><ellipse cx="438" cy="204" rx="8" ry="4" fill="#d8d0bc"/>'
+ +'<circle cx="510" cy="96" r="64" fill="url(#i_lamp)"/>'
+ +'<path d="M488 74 l44 0 l-8 34 l-28 0 Z" fill="#c9a063"/><rect x="507" y="108" width="5" height="100" fill="#241c12"/>'
+ +'<path d="M492 208 l36 0 l-6 8 l-24 0 Z" fill="#241c12"/>'
+ +'<ellipse cx="390" cy="268" rx="200" ry="20" fill="#402d20" opacity=".5"/>'
+ +'<rect width="760" height="300" fill="url(#i_vg)"/></svg>';
+};
+BGS.dai=()=>{
+ let tiles='';
+ for(let x=0;x<=760;x+=34) tiles+='<line x1="'+x+'" y1="0" x2="'+x+'" y2="186" stroke="#2e3842" stroke-width="1" opacity=".5"/>';
+ for(let y=0;y<=186;y+=30) tiles+='<line x1="0" y1="'+y+'" x2="760" y2="'+y+'" stroke="#2e3842" stroke-width="1" opacity=".5"/>';
+ return '<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">'
+ +'<defs><radialGradient id="d_vg" cx="50%" cy="45%" r="78%"><stop offset="50%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#02060a" stop-opacity=".62"/></radialGradient>'
+ +'<radialGradient id="d_fl" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#cfe8da" stop-opacity=".32"/><stop offset="100%" stop-color="#cfe8da" stop-opacity="0"/></radialGradient></defs>'
+ +'<rect width="760" height="300" fill="#232a31"/>'+tiles
+ +'<ellipse cx="380" cy="40" rx="200" ry="50" fill="url(#d_fl)"/>'
+ +'<rect x="270" y="16" width="220" height="9" rx="4" fill="#cfe3da" opacity=".85"/>'
+ +'<rect x="60" y="40" width="280" height="66" fill="#3e4248" stroke="#15181c" stroke-width="3"/>'
+ +'<line x1="200" y1="40" x2="200" y2="106" stroke="#15181c" stroke-width="3"/>'
+ +'<circle cx="188" cy="74" r="3" fill="#9aa3ad"/><circle cx="212" cy="74" r="3" fill="#9aa3ad"/>'
+ +'<rect x="592" y="46" width="98" height="86" fill="#0d1830" stroke="#3a3326" stroke-width="6"/>'
+ +rainSVG(595,49,92,80,'d_rc')
+ +'<rect x="36" y="178" width="690" height="16" fill="#7a8088"/>'
+ +'<rect x="40" y="194" width="682" height="92" fill="#4a4f55"/>'
+ +'<line x1="220" y1="194" x2="220" y2="286" stroke="#33373c" stroke-width="3"/>'
+ +'<line x1="420" y1="194" x2="420" y2="286" stroke="#33373c" stroke-width="3"/>'
+ +'<line x1="600" y1="194" x2="600" y2="286" stroke="#33373c" stroke-width="3"/>'
+ +'<rect x="292" y="180" width="168" height="12" fill="#2c3138"/>'
+ +'<path d="M362 180 l0 -22 q0 -8 10 -8 l12 0" stroke="#aab2bc" stroke-width="5" fill="none"/>'
+ +'<rect x="500" y="148" width="100" height="32" fill="none" stroke="#6a737d" stroke-width="2.5"/>'
+ +[0,1,2,3].map(i=>'<line x1="'+(512+i*24)+'" y1="148" x2="'+(512+i*24)+'" y2="180" stroke="#6a737d" stroke-width="2"/>').join('')
+ +'<path d="M516 168 q0 -10 10 -10 q10 0 10 10 l-2 10 l-16 0 Z" fill="#d8d0bc"/>'
+ +'<path d="M548 158 q0 10 10 10 q10 0 10 -10 l-1 -6 l-18 0 Z" fill="#d8d0bc"/>'
+ +'<path d="M96 180 q-2 -26 18 -28 q4 -8 14 -6 q22 2 22 34 Z" fill="#3c4248"/><rect x="112" y="142" width="8" height="8" fill="#3c4248"/>'
+ +'<rect x="84" y="180" width="80" height="6" fill="#2a2e33"/>'
+ +'<rect width="760" height="300" fill="url(#d_vg)"/></svg>';
+};
+/* ========== 人物バストアップSVG ========== */
+const BUSTS={};
+BUSTS.kumai='<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">'
+ +'<path d="M22 240 L30 162 Q34 128 64 116 L84 106 L116 106 L136 116 Q166 128 170 162 L178 240 Z" fill="#4a3a2a" stroke="#191009" stroke-width="2"/>'
+ +'<path d="M84 106 L100 132 L116 106 L112 100 L88 100 Z" fill="#d8d0bc"/>'
+ +'<path d="M96 110 L104 110 L107 142 L100 156 L93 142 Z" fill="#6e3434"/>'
+ +'<path d="M84 106 L97 130 L76 150 L66 120 Z" fill="#3a2c1f" stroke="#191009" stroke-width="1.5"/>'
+ +'<path d="M116 106 L103 130 L124 150 L134 120 Z" fill="#3a2c1f" stroke="#191009" stroke-width="1.5"/>'
+ +'<rect x="87" y="84" width="26" height="24" fill="#b98e6c"/>'
+ +'<path d="M68 58 Q68 22 100 22 Q132 22 132 58 Q132 92 100 97 Q68 92 68 58 Z" fill="#c79d7d" stroke="#1a1410" stroke-width="2"/>'
+ +'<path d="M66 58 Q62 16 100 14 Q138 16 134 58 Q134 42 124 34 Q114 24 100 26 Q86 24 76 34 Q66 42 66 58 Z" fill="#55504a"/>'
+ +'<rect x="62" y="56" width="8" height="16" rx="3" fill="#c79d7d" stroke="#1a1410" stroke-width="1.5"/>'
+ +'<rect x="130" y="56" width="8" height="16" rx="3" fill="#c79d7d" stroke="#1a1410" stroke-width="1.5"/>'
+ +'<rect x="75" y="51" width="19" height="5" fill="#3a342c" transform="rotate(9 84 53)"/>'
+ +'<rect x="106" y="51" width="19" height="5" fill="#3a342c" transform="rotate(-9 116 53)"/>'
+ +'<rect x="79" y="62" width="12" height="2.6" fill="#241c14"/><rect x="109" y="62" width="12" height="2.6" fill="#241c14"/>'
+ +'<path d="M100 60 L96 73" stroke="#8d6b50" stroke-width="2" fill="none"/>'
+ +'<path d="M85 79 Q100 72 115 79 Q100 88 85 79 Z" fill="#55504a"/>'
+ +'<path d="M82 68 q4 3 8 1" stroke="#8d6b50" stroke-width="1.2" fill="none" opacity=".7"/>'
+ +'<path d="M110 69 q4 2 8 0" stroke="#8d6b50" stroke-width="1.2" fill="none" opacity=".7"/></svg>';
+BUSTS.kayoko='<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">'
+ +'<path d="M32 240 Q42 152 78 130 L100 118 L122 130 Q158 152 168 240 Z" fill="#37514a" stroke="#101c18" stroke-width="2"/>'
+ +'<path d="M100 120 L76 136 L94 176 L100 154 Z" fill="#e3decb"/>'
+ +'<path d="M100 120 L124 136 L106 176 L100 154 Z" fill="#d6d0ba"/>'
+ +'<path d="M82 132 L90 150" stroke="#9c4a4a" stroke-width="3"/>'
+ +'<path d="M118 132 L110 150" stroke="#9c4a4a" stroke-width="3"/>'
+ +'<rect x="89" y="88" width="22" height="24" fill="#dabd9f"/>'
+ +'<path d="M72 60 Q72 28 100 28 Q128 28 128 60 Q128 90 100 95 Q72 90 72 60 Z" fill="#e8cdb2" stroke="#241c18" stroke-width="2"/>'
+ +'<path d="M70 62 Q64 20 100 18 Q136 20 130 62 Q132 80 124 88 Q130 58 118 42 Q110 30 100 30 Q90 30 82 42 Q70 58 76 88 Q68 80 70 62 Z" fill="#23222c"/>'
+ +'<circle cx="135" cy="76" r="13" fill="#23222c"/>'
+ +'<path d="M80 56 q7 -3 13 0" stroke="#3a3030" stroke-width="2" fill="none"/>'
+ +'<path d="M107 56 q6 -3 13 0" stroke="#3a3030" stroke-width="2" fill="none"/>'
+ +'<path d="M83 65 q6 4 11 0" stroke="#241c14" stroke-width="2" fill="none"/>'
+ +'<path d="M106 65 q5 4 11 0" stroke="#241c14" stroke-width="2" fill="none"/>'
+ +'<path d="M100 70 L98 78" stroke="#b89878" stroke-width="1.6" fill="none"/>'
+ +'<path d="M95 86 q5 3 10 0" stroke="#a06a5a" stroke-width="1.8" fill="none"/></svg>';
+BUSTS.tabuchi='<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">'
+ +'<path d="M28 240 L36 168 Q40 134 72 122 L88 112 L112 112 L128 122 Q160 134 164 168 L172 240 Z" fill="#3e4654" stroke="#14171e" stroke-width="2"/>'
+ +'<path d="M88 112 L100 134 L112 112 L108 106 L92 106 Z" fill="#dcd8cc"/>'
+ +'<path d="M97 114 L103 114 L106 146 L100 158 L94 146 Z" fill="#2c3038"/>'
+ +'<path d="M88 112 L99 132 L80 148 L72 124 Z" fill="#333a46" stroke="#14171e" stroke-width="1.5"/>'
+ +'<path d="M112 112 L101 132 L120 148 L128 124 Z" fill="#333a46" stroke="#14171e" stroke-width="1.5"/>'
+ +'<rect x="89" y="88" width="22" height="26" fill="#c8a584"/>'
+ +'<path d="M72 58 Q72 24 100 24 Q128 24 128 58 Q128 90 100 95 Q72 90 72 58 Z" fill="#d8b694" stroke="#1c140e" stroke-width="2"/>'
+ +'<path d="M70 46 Q76 18 100 18 Q126 20 130 50 Q120 32 104 31 Q86 31 78 44 Z" fill="#2c2a30"/>'
+ +'<rect x="66" y="54" width="8" height="15" rx="3" fill="#d8b694" stroke="#1c140e" stroke-width="1.5"/>'
+ +'<rect x="126" y="54" width="8" height="15" rx="3" fill="#d8b694" stroke="#1c140e" stroke-width="1.5"/>'
+ +'<path d="M78 50 q6 -3 12 -1" stroke="#3a342c" stroke-width="2.2" fill="none"/>'
+ +'<path d="M110 49 q6 -2 12 1" stroke="#3a342c" stroke-width="2.2" fill="none"/>'
+ +'<circle cx="86" cy="62" r="11" fill="#dce8f2" fill-opacity=".88" stroke="#3a3f49" stroke-width="2.4"/>'
+ +'<circle cx="114" cy="62" r="11" fill="#dce8f2" fill-opacity=".88" stroke="#3a3f49" stroke-width="2.4"/>'
+ +'<line x1="97" y1="61" x2="103" y2="61" stroke="#3a3f49" stroke-width="2.4"/>'
+ +'<path d="M80 58 l9 -5" stroke="#fff" stroke-width="2" opacity=".85"/>'
+ +'<path d="M108 58 l9 -5" stroke="#fff" stroke-width="2" opacity=".85"/>'
+ +'<path d="M100 70 L98 77" stroke="#a07c5c" stroke-width="1.6"/>'
+ +'<path d="M94 86 q6 2 12 0" stroke="#8a5c48" stroke-width="1.8" fill="none"/></svg>';
+BUSTS.mizuhara='<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">'
+ +'<path d="M34 240 L42 168 Q46 138 74 126 L90 116 L110 116 L126 126 Q154 138 158 168 L166 240 Z" fill="#3a4066" stroke="#12152a" stroke-width="2"/>'
+ +'<path d="M90 116 L100 138 L110 116 L106 110 L94 110 Z" fill="#d8d4c8"/>'
+ +'<path d="M90 116 L99 136 L82 152 L74 128 Z" fill="#303558" stroke="#12152a" stroke-width="1.5"/>'
+ +'<path d="M110 116 L101 136 L118 152 L126 128 Z" fill="#303558" stroke="#12152a" stroke-width="1.5"/>'
+ +'<circle cx="100" cy="150" r="2.4" fill="#1c2040"/><circle cx="100" cy="166" r="2.4" fill="#1c2040"/>'
+ +'<rect x="90" y="90" width="20" height="26" fill="#d3ab8a"/>'
+ +'<path d="M70 58 Q70 24 100 24 Q130 24 130 58 Q130 92 100 97 Q70 92 70 58 Z" fill="#e6c2a4" stroke="#1c140e" stroke-width="2"/>'
+ +'<path d="M66 60 Q62 16 100 14 Q140 16 134 64 Q132 46 120 40 L125 54 Q112 36 94 42 L99 30 Q80 32 76 52 Q68 50 66 60 Z" fill="#2a2338"/>'
+ +'<path d="M76 52 q7 -4 13 -1" stroke="#33283c" stroke-width="2.2" fill="none"/>'
+ +'<path d="M111 51 q7 -3 13 2" stroke="#33283c" stroke-width="2.2" fill="none"/>'
+ +'<path d="M80 62 l13 1" stroke="#241c14" stroke-width="2.4"/>'
+ +'<path d="M107 63 l13 -1" stroke="#241c14" stroke-width="2.4"/>'
+ +'<path d="M100 64 L97 75" stroke="#b88c68" stroke-width="1.6"/>'
+ +'<path d="M95 85 q5 2 10 0" stroke="#a06a52" stroke-width="1.8" fill="none"/>'
+ +'<path d="M84 80 q3 2 6 1" stroke="#c89878" stroke-width="1.1" opacity=".6" fill="none"/></svg>';
+
+/* ========== 証拠品アイコンSVG ========== */
+const ICONS={
+ isho:'<svg viewBox="0 0 40 40"><rect x="4" y="10" width="32" height="22" rx="2" fill="#e8e0c8" stroke="#6a5c3a"/><path d="M4 12 L20 24 L36 12" stroke="#6a5c3a" fill="none" stroke-width="1.6"/><circle cx="20" cy="27" r="3" fill="#8c3a32"/></svg>',
+ cup:'<svg viewBox="0 0 40 40"><ellipse cx="19" cy="32" rx="14" ry="3" fill="#7a7468"/><path d="M9 14 l20 0 l-3 14 l-14 0 Z" fill="#e8e0c8" stroke="#6a5c3a"/><ellipse cx="19" cy="14" rx="10" ry="3" fill="#3a2a1c"/><path d="M29 16 q7 1 5 7 q-2 5 -7 4" fill="none" stroke="#6a5c3a" stroke-width="2"/><path d="M15 6 q2 3 0 5 M22 4 q2 3 0 5" stroke="#9aa" fill="none"/></svg>',
+ pen:'<svg viewBox="0 0 40 40"><path d="M8 32 L26 10 q3 -3 6 0 q3 3 0 6 L14 34 l-8 2 Z" fill="#1c2438" stroke="#6a7488"/><path d="M10 30 l4 4" stroke="#d9b36a"/><path d="M26 10 q3 -3 6 0 q3 3 0 6 l-3 -1 Z" fill="#d9b36a"/></svg>',
+ wapro:'<svg viewBox="0 0 40 40"><rect x="5" y="8" width="30" height="18" rx="2" fill="#6a7077" stroke="#2c3138"/><rect x="9" y="11" width="14" height="9" fill="#1c2a24"/><line x1="11" y1="14" x2="20" y2="14" stroke="#7adfa0"/><line x1="11" y1="17" x2="17" y2="17" stroke="#7adfa0" opacity=".6"/><g stroke="#454b52"><line x1="26" y1="13" x2="32" y2="13"/><line x1="26" y1="16" x2="32" y2="16"/><line x1="26" y1="19" x2="32" y2="19"/></g><rect x="3" y="26" width="34" height="7" rx="2" fill="#54595f" stroke="#2c3138"/></svg>',
+ sink:'<svg viewBox="0 0 40 40"><path d="M6 24 q0 -8 8 -8 q8 0 8 8 l-2 8 l-12 0 Z" fill="#e8e0c8" stroke="#6a5c3a"/><path d="M24 14 q0 8 7 8 q7 0 7 -8 l-1 -4 l-12 0 Z" fill="#d8d0b8" stroke="#6a5c3a"/><path d="M30 4 l2 3 M34 5 l1 3" stroke="#8ab0d8"/><path d="M8 12 q2 -3 0 -5" stroke="#8ab0d8" fill="none"/></svg>',
+ note:'<svg viewBox="0 0 40 40"><path d="M6 8 q14 -4 14 2 q0 -6 14 -2 l0 24 q-14 -4 -14 2 q0 -6 -14 -2 Z" fill="#e8e0c8" stroke="#6a5c3a"/><line x1="20" y1="10" x2="20" y2="34" stroke="#6a5c3a"/><g stroke="#8a7c5a" stroke-width="1"><line x1="9" y1="14" x2="17" y2="13"/><line x1="9" y1="19" x2="17" y2="18"/><line x1="23" y1="13" x2="31" y2="14"/><line x1="23" y1="18" x2="31" y2="19"/></g></svg>',
+ oubo:'<svg viewBox="0 0 40 40"><rect x="7" y="9" width="26" height="26" fill="#ddd4b8" stroke="#6a5c3a"/><rect x="5" y="6" width="26" height="26" fill="#e8e0c8" stroke="#6a5c3a"/><rect x="9" y="9" width="7" height="16" fill="#9c4a42"/><g stroke="#8a7c5a" stroke-width="1"><line x1="20" y1="12" x2="28" y2="12"/><line x1="20" y1="17" x2="28" y2="17"/><line x1="20" y1="22" x2="28" y2="22"/></g></svg>',
+ memo_k:'<svg viewBox="0 0 40 40"><rect x="5" y="7" width="30" height="26" rx="2" fill="#e8e0c8" stroke="#6a5c3a"/><circle cx="13" cy="15" r="6" fill="#37514a"/><text x="13" y="19" font-size="9" text-anchor="middle" fill="#e8e0c8">佳</text><g stroke="#8a7c5a"><line x1="22" y1="13" x2="32" y2="13"/><line x1="22" y1="18" x2="32" y2="18"/><line x1="8" y1="26" x2="32" y2="26"/></g></svg>',
+ memo_t:'<svg viewBox="0 0 40 40"><rect x="5" y="7" width="30" height="26" rx="2" fill="#e8e0c8" stroke="#6a5c3a"/><circle cx="13" cy="15" r="6" fill="#3e4654"/><text x="13" y="19" font-size="9" text-anchor="middle" fill="#e8e0c8">田</text><g stroke="#8a7c5a"><line x1="22" y1="13" x2="32" y2="13"/><line x1="22" y1="18" x2="32" y2="18"/><line x1="8" y1="26" x2="32" y2="26"/></g></svg>'
+};
+
+/* ========== データ ========== */
+const CH={
+ n:{},
+ sys:{tcolor:'#d9b36a'},
+ ore:{name:'灰崎', color:'#e8e3d3'},
+ kumai:{name:'熊井警部', color:'#d9a05b', bust:'kumai'},
+ kayoko:{name:'佳代子', color:'#7fb6a4', bust:'kayoko'},
+ tabuchi:{name:'田淵', color:'#9aa7c7', bust:'tabuchi'},
+ mizuhara:{name:'水原', color:'#b78bc9', bust:'mizuhara'}
+};
+const EV={
+ isho:{name:'遺書', short:'ワープロで打たれ、封筒に封入されていた。',
+  desc:'ワープロで打たれた遺書。\n『我が最後の作品「雨の終わりに」を世に残し、先に逝く。誰も恨まない。――東山宗一郎』\n封のされた封筒に入っており、開封したのは警察の鑑識（九時四十分）。それまで中身は誰も見ていない。'},
+ cup:{name:'珈琲カップ', short:'飲み残しから即効性の毒物が検出された。',
+  desc:'書斎の机にあった珈琲カップ。飲み残しから即効性の毒物が検出された。胃の内容物からも同じ毒物が出ている。'},
+ pen:{name:'万年筆と原稿用紙', short:'インクは満タン。原稿は「雨」の一字で途切れていた。',
+  desc:'先生愛用の万年筆。インクは満タンで、傍らには書きかけの原稿用紙。\n最後の文字は「雨」。文の途中で、ぷつりと途切れている。'},
+ wapro:{name:'ワープロ', short:'書斎にあった一台。遺書はこれで打たれた。',
+  desc:'書斎のワープロ。印字の癖から、遺書はこの一台で打たれたと見られる。'},
+ sink:{name:'洗われたカップ', short:'台所の水切りカゴに、洗いたてのカップが一客。',
+  desc:'台所の水切りカゴにあった、洗いたてのカップ。家政婦は今日は休み。\n誰かが先生と差し向かいで珈琲を飲み、自分のカップだけ洗った――そう考えられなくもない。'},
+ note:{name:'創作ノート', short:'昨日の日付で、新作の改題が記されている。',
+  desc:'先生の創作ノート。最後の頁、昨日の日付。\n『題を「雨の終わりに」と改める。水原くんに清書を頼んだ。田淵くんには、次に会うとき伝えるつもりだ』'},
+ oubo:{name:'古い応募原稿', short:'『雨の終わり』水原渉・作。二年前の新人賞応募作。',
+  desc:'書棚の奥に隠されていた原稿の写し。表紙には『雨の終わり』水原渉――二年前の新人賞応募作。\n筋立ても人物も、東山宗一郎の「遺作」と瓜二つ。その年の選考委員は東山だった。'},
+ memo_k:{name:'佳代子の証言メモ', short:'機械嫌い／遺書を知らない／濡れていない水原。',
+  desc:'佳代子の証言。\n・主人は大の機械嫌いで、ワープロには触りもしない。清書はすべて水原の仕事。\n・遺書のことは、警察に言われるまで存在すら知らなかった。\n・九時すぎに戻った水原は、あの雨なのにほとんど濡れていなかった。'},
+ memo_t:{name:'田淵の証言メモ', short:'八時に来訪も会えず。新作の題は『雨上がりの街』としか聞いていない。',
+  desc:'編集者・田淵の証言。\n・八時に原稿を受け取りに来たが、先生には会えず、三十分待って帰った。\n・新作の題は『雨上がりの街』としか聞いていない。改題の話は知らない。'}
+};
+const S={ phase:'title', loc:'shosai', stage:'A', flags:{}, ev:[], lives:5, sound:true };
+/* ========== 表示エンジン ========== */
+let typing=false, fastSkip=false, advResolve=null;
+function clickerOn(b){ clicker.style.display=b?'block':'none'; }
+clicker.addEventListener('click',()=>{
+ if(typing){ fastSkip=true; return; }
+ if(advResolve){ const r=advResolve; advResolve=null; clickerOn(false); r(); }
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Enter'||e.key===' '){
+  if(clicker.style.display==='block'){ e.preventDefault(); clicker.click(); }
+ }
+});
+function waitAdv(){ return new Promise(r=>{ advResolve=r; clickerOn(true); }); }
+async function typeText(text,color){
+ typing=true; fastSkip=false; clickerOn(true);
+ txtEl.style.color=color||'#efe9da';
+ txtEl.textContent='';
+ for(let i=0;i<text.length;i++){
+  if(fastSkip) break;
+  txtEl.textContent+=text[i];
+  if(i%3===0) blip();
+  await sleep(22);
+ }
+ txtEl.textContent=text; typing=false;
+}
+function setBust(id){
+ if(!id){ bustEl.classList.remove('on'); return; }
+ if(bustEl.dataset.cur!==id){ bustEl.innerHTML=BUSTS[id]; bustEl.dataset.cur=id; }
+ bustEl.classList.add('on');
+}
+function setScene(id){ S.loc=id; bgEl.innerHTML=BGS[id](); setBust(null); }
+async function say(who,text){
+ const c=CH[who]||{};
+ if(c.name){ nameEl.textContent=c.name; nameEl.style.color=c.color||'#e8e3d3'; nameEl.style.display='inline-block'; }
+ else nameEl.style.display='none';
+ setBust(c.bust||null);
+ await typeText(text, who==='n' ? '#b9c2d6' : (c.tcolor||'#efe9da'));
+ curEl.style.display='block';
+ await waitAdv();
+ curEl.style.display='none';
+}
+async function seq(lines){ for(const L of lines) await say(L[0],L[1]); }
+function choose(opts){
+ return new Promise(r=>{
+  choiceEl.innerHTML='';
+  opts.forEach((o,i)=>{
+   const b=document.createElement('button');
+   b.textContent=o;
+   b.onclick=()=>{ sfxSel(); choiceEl.style.display='none'; r(i); };
+   choiceEl.appendChild(b);
+  });
+  choiceEl.style.display='flex';
+ });
+}
+function setBar(items){
+ barEl.innerHTML='';
+ items.forEach(it=>{
+  const b=document.createElement('button');
+  b.textContent=it.label;
+  b.onclick=it.fn;
+  barEl.appendChild(b);
+ });
+}
+function waitCommand(cmds){
+ return new Promise(r=>{
+  setBar(cmds.map(c=>({label:c.label, fn:()=>{ sfxSel(); setBar([]); r(c); }})));
+ });
+}
+async function getEv(id){
+ if(S.ev.includes(id)) return;
+ S.ev.push(id); sfxDing();
+ ig.querySelector('.igIcon').innerHTML=ICONS[id];
+ ig.querySelector('.igName').textContent='『'+EV[id].name+'』を手帳に記録した';
+ ig.querySelector('.igDesc').textContent=EV[id].short;
+ ig.style.display='block';
+ await waitAdv();
+ ig.style.display='none';
+}
+/* 手帳 */
+let nbResolve=null, nbSel=null;
+function renderGrid(){
+ const g=el('evgrid'); g.innerHTML='';
+ S.ev.forEach(id=>{
+  const d=document.createElement('div');
+  d.className='evitem'+(nbSel===id?' sel':'');
+  d.innerHTML='<div class="evicon">'+ICONS[id]+'</div><div>'+EV[id].name+'</div>';
+  d.onclick=()=>{ sfxSel(); nbDetail(id); };
+  g.appendChild(d);
+ });
+}
+function nbDetail(id){
+ nbSel=id; renderGrid();
+ const dt=el('evdetail');
+ if(!id){ dt.style.display='none'; return; }
+ dt.style.display='flex';
+ el('evdIcon').innerHTML=ICONS[id];
+ el('evdName').textContent=EV[id].name;
+ el('evdDesc').textContent=EV[id].desc;
+ el('evdUse').style.display = nbMode==='select' ? 'inline-block' : 'none';
+}
+let nbMode='view';
+function openNotebook(mode,prompt){
+ return new Promise(r=>{
+  nbMode=mode; nbResolve=r; nbSel=null;
+  el('nbPrompt').textContent = mode==='select' ? (prompt||'つきつける証拠を選べ') : '';
+  el('nbClose').textContent = mode==='select' ? 'やめる' : '閉じる';
+  renderGrid(); nbDetail(null);
+  modal.style.display='flex';
+ });
+}
+function nbFinish(val){
+ modal.style.display='none';
+ const r=nbResolve; nbResolve=null;
+ if(r) r(val);
+}
+el('nbClose').onclick=()=>nbFinish(null);
+el('evdUse').onclick=()=>{ if(nbSel) nbFinish(nbSel); };
+el('hdrNb').onclick=()=>{
+ if(modal.style.display==='flex'||nbResolve) return;
+ if(S.ev.length===0) return;
+ openNotebook('view');
+};
+el('hdrSnd').onclick=function(){
+ S.sound=!S.sound;
+ this.textContent=S.sound?'音：オン':'音：オフ';
+ if(AC){ if(S.sound) AC.resume(); else AC.suspend(); }
+};
+async function flash(text){
+ flashEl.querySelector('span').textContent=text;
+ flashEl.style.display='flex'; sfxSlam();
+ stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+ await sleep(820);
+ flashEl.style.display='none';
+}
+function updLives(){
+ livesEl.textContent='◆'.repeat(S.lives)+'◇'.repeat(Math.max(0,5-S.lives));
+}
+function showLives(b){ livesEl.style.display=b?'inline':'none'; if(b) updLives(); }
+window.onerror=(m)=>{ try{ txtEl.style.color='#e88'; txtEl.textContent='エラー: '+m; }catch(e){} };
+/* ========== オープニング ========== */
+async function intro(){
+ setScene('title'); setRain(true,2); setBGM('calm');
+ await seq([
+  ['n','六月。雨は、もう三日も降りつづいていた。'],
+  ['n','私立探偵・灰崎修（はいざき・しゅう）。それが俺の名だ。看板に偽りはないが、あいにく客はない。'],
+  ['n','事務所の電話が鳴ったのは、九時半を回った頃だった。'],
+  ['kumai','「俺だ、熊井だ。……灰崎、推理作家の東山宗一郎を知ってるな」'],
+  ['ore','「ベストセラー作家だろう。何度か世話になった――本にだが」'],
+  ['kumai','「その東山が死んだ。自宅の書斎で、毒をあおってな。机には遺書ときた」'],
+  ['kumai','「自殺で片づきそうな話だ。……だが、どうにも引っかかる。お前の目を貸せ」'],
+  ['ore','「……雨の夜の呼び出しは高くつくぜ、警部殿」'],
+  ['n','俺は受話器を置き、トレンチコートの襟を立てた。――長い夜になりそうだった。']
+ ]);
+}
+/* ========== 調査パート ========== */
+function peopleHere(){
+ if(S.loc==='shosai') return ['kumai'];
+ if(S.loc==='ima') return ['kayoko','tabuchi','mizuhara','kumai'];
+ return ['kumai'];
+}
+const LOCNAME={shosai:'書斎', ima:'居間', dai:'台所'};
+function hotspots(){
+ const F=S.flags;
+ if(S.loc==='shosai'){
+  const h=[
+   {label:'机の上（封筒）'+(S.ev.includes('isho')?' ✓':''), run:hsIsho},
+   {label:'珈琲カップ'+(S.ev.includes('cup')?' ✓':''), run:hsCup},
+   {label:'万年筆と原稿用紙'+(S.ev.includes('pen')?' ✓':''), run:hsPen},
+   {label:'ワープロ'+(S.ev.includes('wapro')?' ✓':''), run:hsWapro},
+   {label:'書棚'+(S.ev.includes('oubo')?' ✓':''), run:hsShodana},
+   {label:'窓', run:hsMado}
+  ];
+  if(S.stage==='C') h.splice(1,0,{label:'机の引き出し'+(S.ev.includes('note')?' ✓':''), run:hsDrawer});
+  return h;
+ }
+ if(S.loc==='ima') return [
+  {label:'応接の卓', run:async()=>{ await say('n','湯呑が三つ。茶は、とうに冷めきっている。誰も口をつけた様子はない。'); }},
+  {label:'窓', run:async()=>{ await say('n','雨はまだ止まない。庭の灯籠が、ぼんやりと滲んで見えた。'); }}
+ ];
+ return [
+  {label:'流し（水切りカゴ）'+(S.ev.includes('sink')?' ✓':''), run:hsSink},
+  {label:'勝手口', run:async()=>{ await say('n','勝手口の鍵は、内側から掛かっている。……出入りした者は、玄関を通ったことになる。'); }},
+  {label:'食器棚', run:async()=>{ await say('n','客用のカップが行儀よく並んでいる。一客分、間が空いているように見えるのは――気のせいか。'); }}
+ ];
+}
+async function hsIsho(){
+ if(S.ev.includes('isho')){ await say('n','封筒と遺書。何度見ても、活字の遺書というやつは冷たい。'); return; }
+ await seq([
+  ['ore','「机の上に、封筒……これが例の遺書か」'],
+  ['kumai','「ワープロで打たれて、印字されたものだ。封のされた封筒に入っていた」'],
+  ['kumai','「開けたのはうちの鑑識だ。九時四十分。それまで中身は誰も見ちゃいない」'],
+  ['n','――『我が最後の作品「雨の終わりに」を世に残し、先に逝く。誰も恨まない。東山宗一郎』'],
+  ['ore','「……題は『雨の終わりに』、か。署名まで活字とはな」']
+ ]);
+ await getEv('isho');
+}
+async function hsCup(){
+ if(S.ev.includes('cup')){ await say('n','飲み残しの珈琲。毒はこの中にあった。'); return; }
+ await seq([
+  ['ore','「飲みかけの珈琲だ。……こいつに毒が？」'],
+  ['kumai','「即効性の毒物だ。検出済みだよ。仏さんの胃からも同じものが出てる」'],
+  ['ore','「自分で淹れて、自分で盛ったか。あるいは――」']
+ ]);
+ await getEv('cup');
+}
+async function hsPen(){
+ if(S.ev.includes('pen')){ await say('n','書きかけの原稿。最後の文字は「雨」。その先は、もう書かれることがない。'); return; }
+ await seq([
+  ['ore','「使い込まれた万年筆だ。インクは満タン……隣に、書きかけの原稿用紙」'],
+  ['n','原稿は、文の途中で途切れていた。――最後の文字は『雨』。'],
+  ['kumai','「執筆の途中で手が止まった。……そんなところだろうな」']
+ ]);
+ await getEv('pen');
+}
+async function hsWapro(){
+ if(S.ev.includes('wapro')){ await say('n','ワープロ。遺書はこの一台で打たれた。'); return; }
+ await seq([
+  ['ore','「ワープロが一台。電源は落ちてる」'],
+  ['kumai','「遺書はこいつで打たれたと見ていい。印字の癖が一致した」'],
+  ['ore','「作家の最期の言葉が、活字か。……妙に味気ない話だ」']
+ ]);
+ await getEv('wapro');
+}
+async function hsShodana(){
+ if(S.stage!=='C'){ await say('n','壁一面の本。乱れはない。初版本の谷崎が、涼しい顔で並んでいる。'); return; }
+ if(S.ev.includes('oubo')){ await say('n','本の奥に隠されていた、古い応募原稿。――『雨の終わり』水原渉。'); return; }
+ await seq([
+  ['ore','「……待て。本の奥に、何か挟んである」'],
+  ['n','古い原稿の束だった。表紙には――『雨の終わり』　水原渉。'],
+  ['kumai','「二年前の新人賞の応募作……の、控えの写しだな。なぜこんな所に」'],
+  ['kumai','「……思い出したぞ。その年の選考委員は、東山宗一郎だ」'],
+  ['ore','「読むまでもない、か。筋は、あの『遺作』と同じだ」']
+ ]);
+ await getEv('oubo');
+}
+async function hsDrawer(){
+ if(S.ev.includes('note')){ await say('n','創作ノート。改題を知っていたのは、清書を頼まれた水原だけ。'); return; }
+ await seq([
+  ['ore','「引き出しの奥に、ノート……創作ノートか」'],
+  ['n','最後の頁。昨日の日付。――『題を「雨の終わりに」と改める。水原くんに清書を頼んだ。田淵くんには、次に会うとき伝えるつもりだ』'],
+  ['ore','「……改題を知っていたのは、水原だけ、ということになるな」'],
+  ['kumai','「田淵は『雨上がりの街』としか聞いてない、と言ったな。……面白くなってきた」']
+ ]);
+ await getEv('note');
+}
+async function hsMado(){
+ await seq([
+  ['n','窓の鍵は、内側から掛かっている。窓の外は篠突く雨。'],
+  ['kumai','「出入りは廊下側の扉だけだ。鍵は掛かっていなかった」']
+ ]);
+}
+async function hsSink(){
+ if(S.ev.includes('sink')){ await say('n','洗いたてのカップ。誰が、いつ洗った？'); return; }
+ await seq([
+  ['ore','「水切りカゴに、洗いたてのカップが一客……」'],
+  ['kumai','「手伝いの婆さんは今日は休みだそうだ。朝から誰も洗い物はしてない――はずだがな」'],
+  ['ore','「誰かが先生と差し向かいで珈琲を飲んで、自分のカップだけ洗った。……そう読めなくもないな」']
+ ]);
+ await getEv('sink');
+}
+/* ========== 聞き込み ========== */
+function topicsOf(p){
+ const F=S.flags;
+ if(S.stage==='C'){
+  const one={
+   kayoko:[['kayoko','「……主人が、自殺でないのなら。いったい、誰が……」']],
+   tabuchi:[['tabuchi','「し、調べ直しですか。私はもう、申し上げることは何も……」']],
+   mizuhara:[['mizuhara','「……まだ何か？　僕は、早く休みたいんですが」']],
+   kumai:null
+  };
+  if(p!=='kumai') return [{label:'……', done:false, run:async()=>{ await seq(one[p]); }}];
+ }
+ if(p==='kayoko') return [
+  {label:'発見のとき', done:F.k1, run:async()=>{ F.k1=1; await seq([
+   ['kayoko','「九時に、お茶をお持ちして……襖を開けたら、机に、主人が伏せていて……」'],
+   ['kayoko','「気が動転して、悲鳴を……。水原さんが、駆けつけてくださいました」'],
+   ['ore','「遺書は、ご覧になりましたか」'],
+   ['kayoko','「いいえ……。遺書があったことさえ、警察の方に伺うまで、何も」']
+  ]); }},
+  {label:'先生のこと', done:F.k2, run:async()=>{ F.k2=1;
+   EV.wapro.desc+='\n先生は大の機械嫌いで、このワープロに触ることはなかった（佳代子の証言）。清書はすべて水原の仕事。';
+   await seq([
+   ['kayoko','「執筆は、いつも万年筆でした。機械は大の苦手で……」'],
+   ['kayoko','「ワープロは、水原さんのお仕事の道具です。主人は触りもしませんでした」'],
+   ['kayoko','「原稿の清書は、すべて水原さんがなさっていましたから」'],
+   ['ore','（機械嫌いの作家、か。……覚えておこう）']
+  ]); }},
+  {label:'水原のこと', done:F.k3, run:async()=>{ F.k3=1; await seq([
+   ['kayoko','「九時すぎにお戻りになって……あら、と思ったんです」'],
+   ['kayoko','「あの土砂降りでしたのに、ほとんど濡れていらっしゃらなくて」'],
+   ['ore','（……傘を差しても、肩くらいは濡れる雨だ）']
+  ]); }}
+ ];
+ if(p==='tabuchi') return [
+  {label:'あの夜のこと', done:F.t1, run:async()=>{ F.t1=1; await seq([
+   ['tabuchi','「八時に、原稿を頂きに伺いました。ですが奥様が『誰にも会いたくないそうで』と……」'],
+   ['tabuchi','「三十分ほど居間で粘りましたが、お会いできず、諦めて帰りました」'],
+   ['tabuchi','「まさか、それきりになるとは……」']
+  ]); }},
+  {label:'新作のこと', done:F.t2, run:async()=>{ F.t2=1; await seq([
+   ['tabuchi','「次の長編です。題は『雨上がりの街』。傑作になると、先生も……」'],
+   ['ore','「『雨上がりの街』？　……『雨の終わりに』じゃなく、か」'],
+   ['tabuchi','「え？　いえ、私は『雨上がりの街』としか伺っておりません。改題のお話も、何も」'],
+   ['ore','（遺書の題と、食い違う。……担当編集が知らない改題、ね）']
+  ]); }}
+ ];
+ if(p==='mizuhara') return [
+  {label:'あの夜のこと', done:F.m1, run:async()=>{ F.m1=1; await seq([
+   ['mizuhara','「八時前に屋敷を出て、駅前の本屋にいました。戻ったのは九時すぎです」'],
+   ['mizuhara','「そうしたら、奥様の悲鳴が聞こえて……あとは、ご存じの通りです」']
+  ]); }},
+  {label:'先生のこと', done:F.m2, run:async()=>{ F.m2=1; await seq([
+   ['mizuhara','「厳しい人でした。でも、行き場のなかった僕を拾ってくれた……恩人です」'],
+   ['ore','「あんたの仕事は？」'],
+   ['mizuhara','「資料集めと、清書です。先生の原稿は、全部僕がワープロで打ち直すんです」']
+  ]); }}
+ ];
+ return null; // 熊井はヒント
+}
+async function hint(){
+ const F=S.flags, got=id=>S.ev.includes(id);
+ let t;
+ if(S.stage==='A'){
+  const rest=[];
+  if(!got('isho'))rest.push('机の封筒'); if(!got('cup'))rest.push('珈琲カップ');
+  if(!got('pen'))rest.push('万年筆'); if(!got('wapro'))rest.push('ワープロ');
+  t = rest.length ? '（まずは現場だ。……'+rest.join('、')+'。気になる物は全部見ておく）'
+   : '（現場はあらかた見た。次だ）';
+ }else if(S.stage==='B'){
+  const rest=[];
+  if(!(F.k1&&F.k2&&F.k3))rest.push('奥さんの話をもっと聞く');
+  if(!(F.t1&&F.t2))rest.push('編集者の田淵に当たる');
+  if(!(F.m1&&F.m2))rest.push('弟子の水原に当たる');
+  if(!got('sink'))rest.push('台所も覗いておく');
+  t = rest.length ? '（……'+rest.join('。')+'。それからだ）'
+   : '（材料は揃ったか。……熊井と整理するか）';
+ }else{
+  const rest=[];
+  if(!got('note'))rest.push('机の引き出し'); if(!got('oubo'))rest.push('書棚の奥');
+  t = rest.length ? '（書斎だ。'+rest.join('と、')+'――熊井はそう言っていた）'
+   : '（……役者は揃った）';
+ }
+ await say('ore',t);
+}
+async function doExamine(){
+ const hs=hotspots();
+ const i=await choose([...hs.map(h=>h.label),'やめる']);
+ if(i<hs.length) await hs[i].run();
+}
+async function doTalk(){
+ const ppl=peopleHere();
+ let p;
+ if(ppl.length===1) p=ppl[0];
+ else{
+  const i=await choose([...ppl.map(x=>CH[x].name),'やめる']);
+  if(i>=ppl.length) return;
+  p=ppl[i];
+ }
+ const tp=topicsOf(p);
+ if(!tp){ await hint(); return; }
+ const i=await choose([...tp.map(t=>(t.done?'✓ ':'')+t.label),'やめる']);
+ if(i<tp.length) await tp[i].run();
+}
+async function doMove(){
+ const locs=['shosai','ima','dai'].filter(l=>l!==S.loc);
+ const i=await choose([...locs.map(l=>LOCNAME[l]+'へ'),'やめる']);
+ if(i>=locs.length) return;
+ setScene(locs[i]);
+ await say('n','――'+LOCNAME[locs[i]]+'――');
+}
+function buildCmds(){
+ const c=[{label:'調べる', run:doExamine},{label:'話す', run:doTalk}];
+ if(S.flags.unlockMove) c.push({label:'移動する', run:doMove});
+ c.push({label:'考える', run:hint});
+ if(S.ev.length) c.push({label:'手帳', run:async()=>{ await openNotebook('view'); }});
+ return c;
+}
+/* ========== 進行トリガー ========== */
+async function checkTriggers(){
+ const F=S.flags, got=id=>S.ev.includes(id);
+ if(S.stage==='A' && got('isho')&&got('cup')&&got('pen')&&got('wapro')){
+  S.stage='B'; F.unlockMove=1;
+  await seq([
+   ['kumai','「現場はこんなものか。……家の者は居間に集めてある」'],
+   ['kumai','「女房の佳代子さん、担当編集の田淵、住み込みの弟子の水原だ。話を聞いてやってくれ」'],
+   ['ore','「ああ。……台所も借りるぜ。猫舌なんでね、家の中が気になるんだ」'],
+   ['sys','◆「移動する」コマンドが使えるようになった。居間と台所へ行ける。']
+  ]);
+  return;
+ }
+ if(S.stage==='B' && F.k1&&F.k2&&F.k3&&F.t1&&F.t2&&F.m1&&F.m2&&got('sink')){
+  if(!got('memo_k')){ await say('n','俺は手帳に、佳代子と田淵の言葉を書き留めた。'); await getEv('memo_k'); await getEv('memo_t'); }
+  await quiz();
+  return;
+ }
+ if(S.stage==='C' && got('note')&&got('oubo') && !F.toTrial){
+  F.toTrial=1;
+  await seq([
+   ['kumai','「……役者は揃ったな」'],
+   ['ore','「ああ。居間へ行こう。――水原に、訊きたいことができた」']
+  ]);
+  S.phase='trial';
+  return;
+ }
+}
+/* ========== 中間推理（ファミ探風クイズ） ========== */
+async function quiz(){
+ await seq([
+  ['kumai','「灰崎、そろそろ整理といこう。……署の連中は、自殺で上げる気でいる」'],
+  ['kumai','「遺書はある。毒も即効性。書斎の窓は内鍵、出入りは廊下の扉だけ。家には身内しかいない」'],
+  ['kumai','「だがな。――お前の手帳から一つ出せ。『自殺』と食い違うものを、だ」']
+ ]);
+ while(true){
+  const id=await openNotebook('select','「自殺」と食い違う証拠は？');
+  if(id==='isho'){
+   await say('kumai','「ほう、遺書ときたか。……遺書の、何が引っかかる」');
+   const i=await choose(['ワープロで打たれていること','文面が短すぎること','日付がないこと']);
+   if(i===0){
+    await seq([
+     ['ore','「佳代子さんは言った。先生は大の機械嫌い、ワープロには触りもしない、とな」'],
+     ['ore','「執筆も手紙も万年筆の男が――人生最後の言葉だけ、活字で残すか？」'],
+     ['kumai','「……あり得んな。万年筆のインクは満タン、原稿用紙も山ほどあるときてる」'],
+     ['kumai','「こいつが殺しなら、遺書は偽物。打った人間が、別にいる」'],
+     ['kumai','「書斎をもう一度、隅まで洗うぞ。机の引き出しと、書棚の奥だ。来い」'],
+     ['n','俺たちは書斎へ取って返した。']
+    ]);
+    S.stage='C'; setScene('shosai');
+    return;
+   }
+   await say('kumai','「……そこじゃない気がするな。もう一度だ」');
+   continue;
+  }
+  if(id==='wapro'){ await say('kumai','「惜しいな。それと『組み合わせて』初めて引っかかる物が、手帳にあるだろう」'); continue; }
+  if(id==='pen'){ await say('kumai','「万年筆か。……悪くない筋だが、まず大本命があるだろう」'); continue; }
+  if(id==null){ await say('kumai','「逃げるなよ、灰崎。お前の手帳の中だ」'); continue; }
+  await say('kumai','「……それは別に、食い違っちゃおらんだろう」');
+ }
+}
+/* ========== 調査メインループ ========== */
+async function investigation(){
+ S.phase='roam'; setScene('shosai');
+ await seq([
+  ['n','東山邸、二階の書斎。線香と、冷めた珈琲のにおい。'],
+  ['kumai','「来たな。現場はこの書斎だ。仏さんはもう運んだが、ほかはそのままにしてある」'],
+  ['ore','「相変わらず手回しのいいことで」'],
+  ['sys','◆コマンドで調査を進めよう。「調べる」で現場を、「話す」で聞き込みを。困ったら「考える」。']
+ ]);
+ while(S.phase==='roam'){
+  const c=await waitCommand(buildCmds());
+  await c.run();
+  await checkTriggers();
+ }
+ setBar([]);
+}
+/* ========== 対決パート（尋問） ========== */
+function trialAction(){
+ return new Promise(r=>{
+  const mk=(label,val)=>({label, fn:()=>{ sfxSel(); setBar([]); r(val); }});
+  setBar([mk('◀ 前の証言','prev'), mk('次の証言 ▶','next'), mk('ゆさぶる','press'), mk('証拠をつきつける','present')]);
+ });
+}
+async function showStatement(st,i,n){
+ nameEl.textContent='水原の証言　'+(i+1)+'／'+n;
+ nameEl.style.color='#9adfae'; nameEl.style.display='inline-block';
+ setBust('mizuhara');
+ await typeText(st.t,'#9adfae');
+ clickerOn(false);
+}
+async function wrongPresent(){
+ S.lives--; updLives(); sfxBuzz();
+ stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+ await seq([
+  ['mizuhara','「……それが、何か？　僕の話と、何の関係があるんです」'],
+  ['kumai','「（おい灰崎、的を外すな。次はないと思って撃て）」']
+ ]);
+}
+async function statementLoop(round){
+ let i=0; const n=round.sts.length;
+ while(true){
+  await showStatement(round.sts[i],i,n);
+  const act=await trialAction();
+  const st=round.sts[i];
+  if(act==='next'){ i=(i+1)%n; continue; }
+  if(act==='prev'){ i=(i-1+n)%n; continue; }
+  if(act==='press'){ await seq(st.press); continue; }
+  // つきつける
+  const ev=await openNotebook('select');
+  if(ev==null) continue;
+  if(ev===st.ok){
+   await flash('そこだ！');
+   await seq(st.okLines);
+   return 'ok';
+  }
+  if(st.near && st.near[ev]){ await seq(st.near[ev]); continue; }
+  await wrongPresent();
+  if(S.lives<=0) return 'dead';
+ }
+}
+async function runRound(round){
+ while(true){
+  await seq(round.intro);
+  const res=await statementLoop(round);
+  if(res==='ok') return;
+  // ゲームオーバー → 同ラウンドやり直し
+  setBGM(null); sfxBuzz();
+  await seq([
+   ['kumai','「待て待て、灰崎。今のは筋が通らん。……下手な追及は冤罪のもとだ」'],
+   ['mizuhara','「……探偵さん、お疲れなんじゃないですか」'],
+   ['n','――頭を冷やせ。証言と証拠、噛み合わない一点はどこだ。'],
+   ['sys','◆ライフが回復した。もう一度、同じ証言に挑む。']
+  ]);
+  S.lives=5; updLives(); setBGM('tense');
+ }
+}
+const R1={
+ intro:[['sys','――水原の証言『あの夜のこと』――']],
+ sts:[
+  {t:'「あの夜は八時前に屋敷を出て、駅前の本屋にいました。戻ったのは九時すぎです」',
+   press:[
+    ['ore','「本屋で何を買った」'],
+    ['mizuhara','「……文庫を何冊か立ち読みして、結局、何も。雨がひどくなる前に帰ろうと思って」'],
+    ['ore','（書名ひとつ出てこない、か。……曖昧だが、崩すにはまだ弱い）']],
+   near:{memo_k:[
+    ['ore','「奥さんは言ってたぜ。九時すぎに戻ったあんたは、ろくに濡れてもいなかったとな」'],
+    ['mizuhara','「こ、小降りになった時を見はからって、走って帰ったんです」'],
+    ['ore','（あの土砂降りで、か。……だが言い逃れられた。これだけじゃ詰め切れん）']]}},
+  {t:'「戻ってすぐ、奥様の悲鳴が聞こえました。それで二階の書斎へ駆けつけたんです」',
+   press:[
+    ['mizuhara','「玄関で靴を脱いでいる時でした。心臓が、止まるかと思った」'],
+    ['ore','（……ここは淀みなく喋るな）']]},
+  {t:'「書斎の入口から見えました。机に伏せた先生と……ワープロ打ちの、遺書が」',
+   press:[
+    ['ore','「確かに見たんだな？　入口から」'],
+    ['mizuhara','「ええ、はっきりと。……忘れもしませんよ」'],
+    ['ore','（はっきりと、ね。……今の言葉、覚えておくぜ）']],
+   ok:'isho',
+   okLines:[
+    ['ore','「『ワープロ打ちの遺書が見えた』――確かにそう言ったな、水原さん」'],
+    ['ore','「だがこの遺書は、封のされた封筒の中にあった。開けたのは警察の鑑識、九時四十分だ」'],
+    ['kumai','「発見のとき、机にあったのは『封筒』だけだ。中身がワープロ打ちだと、入口から透けて見えたのか？」'],
+    ['mizuhara','「あ……」'],
+    ['ore','「答えてもらおうか。――なぜあんたは、遺書がワープロで打たれていたことを知ってる？」']],
+   near:{wapro:[
+    ['mizuhara','「ええ、先生がワープロで遺書を……。それが、何か？」'],
+    ['ore','（こいつ自身が毎日使う機械だ。『打てた』というだけじゃ縛れない……）'],
+    ['ore','（そうじゃない。遺書そのものに――『見えたはずのないもの』があるはずだ）']]}},
+  {t:'「でも怖くて、書斎には一歩も入れませんでした。あとは奥様のそばで、警察を待っただけです」',
+   press:[
+    ['mizuhara','「情けない話ですけどね。……死体を見るのは、初めてだったから」']],
+   near:{sink:[
+    ['ore','「台所に洗いたてのカップが一客あった。先生と誰かが、差し向かいで珈琲を飲んだんじゃないのか」'],
+    ['mizuhara','「……家政婦さんでしょう」'],
+    ['kumai','「今日は休みだ」'],
+    ['mizuhara','「なら、奥様では？　僕じゃありませんよ」'],
+    ['ore','（はぐらかされた。……外堀じゃない、本丸を突くべきだ）']]}}
+ ]
+};
+const R2={
+ intro:[
+  ['mizuhara','「ち、違う……違うんだ。聞いてください」'],
+  ['sys','――水原の証言『遺書について』――']],
+ sts:[
+  {t:'「遺書のことは、あとで廊下で、奥様から聞いたんです。だから知っていた。それだけだ」',
+   press:[
+    ['ore','「いつ、どこで聞いた」'],
+    ['mizuhara','「だから、警察が来る前です。廊下で、奥様が、その……遺書がどうとか……」'],
+    ['ore','（……言葉が濁ったな）']],
+   ok:'memo_k',
+   okLines:[
+    ['ore','「奥さんの証言だ。――『遺書のことは、警察に言われるまで、存在すら知らなかった』」'],
+    ['mizuhara','「そ、そんな……じゃあ、刑事の誰かから……」'],
+    ['kumai','「言っておくがな。遺書の存在は、まだ公表しとらん。家の者にも、報道にもだ」'],
+    ['kumai','「中身がワープロ打ちだと知り得たのは――鑑識と、わしと、灰崎と。あとは『書いた人間』だけだ」'],
+    ['mizuhara','「ぼ、僕じゃない……僕じゃ……」']],
+   near:{isho:[
+    ['ore','（遺書そのものをもう一度突きつけても、堂々巡りだ）'],
+    ['ore','（『奥様から聞いた』という言い訳――それを直接潰す“証言”があるはずだ）']]}},
+  {t:'「動転してたんですよ。あの晩のことは、細かいことまで覚えちゃいない」',
+   press:[
+    ['mizuhara','「あなただって、恩人の死体を見れば分かりますよ」'],
+    ['ore','（さっきは『はっきり見た、忘れもしない』と言ったくせにな）']]},
+  {t:'「……とにかく！　僕はそれ以上、何も知りません」',
+   press:[
+    ['mizuhara','「……っ。早く、終わりにしてください」']]}
+ ]
+};
+const R3={
+ intro:[
+  ['mizuhara','「……はっ、ははっ。……知ってたら、何だって言うんですか」'],
+  ['sys','――水原の証言『動機』――']],
+ sts:[
+  {t:'「遺書の中身くらい、想像はつく。僕は先生の文章を、誰より読んできたんだ」',
+   press:[
+    ['ore','「想像で『ワープロ打ち』まで当てたのか。大した想像力だ。――作家になれるぜ」'],
+    ['mizuhara','「…………っ」'],
+    ['ore','（今の一言、妙に効いたな……）']]},
+  {t:'「だいたい、僕には先生を殺す理由がない！　拾ってもらった恩はあっても、恨みなんて――」',
+   press:[
+    ['mizuhara','「住み込みで、清書も、資料集めも……僕は先生に尽くしてきた。それの、どこに恨みが？」']],
+   ok:'oubo',
+   okLines:[
+    ['ore','「――これが、あんたの『理由』だ」'],
+    ['ore','「二年前の新人賞応募作。『雨の終わり』、水原渉」'],
+    ['ore','「読み比べたよ。東山宗一郎の『遺作』と、筋から人物まで、瓜二つだ」'],
+    ['kumai','「その年の選考委員は東山だ。落とした原稿の写しが、なぜか書棚の奥に隠してあった」'],
+    ['mizuhara','「……っ、あ……ああ……」'],
+    ['ore','「題まで、最後にはあんたの『雨の終わりに』へ寄せていった。……皮肉なもんだな」']],
+   near:{note:[
+    ['ore','「改題後の題を知っていたのは、あんただけだ」'],
+    ['mizuhara','「だから何です？　題を知ってたら、殺人犯ですか」'],
+    ['ore','（題そのものじゃ弱い。……『動機』を、形にして突きつける）']]}}
+ ]
+};
+async function trial(){
+ setBGM('tense'); showLives(true); setScene('ima');
+ S.lives=5; updLives();
+ await seq([
+  ['n','居間の空気が、張りつめた。'],
+  ['kumai','「水原渉さん。手間だが、あの夜のことをもう一度聞かせてくれ」'],
+  ['mizuhara','「……何度でも。でも、まるで尋問ですね」'],
+  ['ore','（さあ、始めようか。――嘘は必ず、どこかで軋む）'],
+  ['sys','◆証言を読み、怪しければ「ゆさぶる」。矛盾を見つけたら、その証言に「証拠をつきつける」。'],
+  ['sys','◆見当違いの証拠を出すとライフ（◆）が減る。ゼロになれば、追及は振り出しだ。']
+ ]);
+ await runRound(R1);
+ await runRound(R2);
+ await runRound(R3);
+ showLives(false);
+}
+/* ========== 自白〜エピローグ ========== */
+async function confession(){
+ setBGM('sad');
+ await seq([
+  ['n','水原は、しばらく床を見つめていた。やがて――ぽつりと、笑った。'],
+  ['mizuhara','「……はは。……ずっと、信じてたんですよ。落選にも、意味があるって」'],
+  ['mizuhara','「先生に拾われたのも、何かの縁だと思った。雑用も、清書も、苦じゃなかった」'],
+  ['mizuhara','「先月、新作の清書を頼まれましてね。……一枚目で、分かりました。これは、僕の物語だって」'],
+  ['mizuhara','「問い詰めたら、先生は笑ったんだ。――『君の習作を、私が小説にしてやったんだ。感謝したまえ』って」'],
+  ['mizuhara','「あの夜……珈琲に毒を入れて、向かいに座って、先生が飲み干すのをずっと待ってました」'],
+  ['mizuhara','「遺書は、僕が打ちました。先生の字は、誰にも真似できないから」'],
+  ['mizuhara','「……当たり前だ。僕が一番、あの万年筆の字に、憧れてたんだから」'],
+  ['n','――ふと、気づいた。窓を叩く音が、止んでいる。']
+ ]);
+ setRain(false,4);
+ await seq([
+  ['mizuhara','「……雨、あがったんですね」'],
+  ['mizuhara','「先生。……僕の雨は、いつ、あがるんでしょうね」'],
+  ['kumai','「……行くぞ」']
+ ]);
+}
+async function epilogue(){
+ setScene('shosai');
+ await seq([
+  ['n','水原渉は、静かに連行された。'],
+  ['n','書斎の机には、書きかけの原稿用紙。――『雨』の一字で途切れた、東山宗一郎の最後の字。'],
+  ['kumai','「盗作の件も、含めて調べる。……あの新作は、お蔵入りだろうな」'],
+  ['ore','「いや――いつか出るさ。今度は、正しい名前でな」'],
+  ['n','濡れた街に、月が出ていた。長い雨の季節が、終わろうとしていた。']
+ ]);
+}
+function theEnd(){
+ setBGM('calm'); setBust(null);
+ nameEl.style.display='none'; txtEl.textContent=''; curEl.style.display='none';
+ el('endscr').style.display='flex';
+}
+el('btnAgain').onclick=()=>location.reload();
+/* ========== メイン ========== */
+function dbgGrantAll(){
+ ['isho','cup','pen','wapro','sink','memo_k','memo_t'].forEach(id=>{ if(!S.ev.includes(id)) S.ev.push(id); });
+ Object.assign(S.flags,{k1:1,k2:1,k3:1,t1:1,t2:1,m1:1,m2:1,unlockMove:1});
+ EV.wapro.desc+='\n先生は大の機械嫌いで、このワープロに触ることはなかった（佳代子の証言）。清書はすべて水原の仕事。';
+}
+async function main(){
+ setScene('title');
+ el('title').style.display='flex';
+ await new Promise(r=>{ el('btnStart').onclick=()=>{ ac(); r(); }; });
+ el('title').style.display='none';
+ sfxSel();
+ const dbg=new URLSearchParams(location.search).get('dbg');
+ if(dbg==='trial'){
+  dbgGrantAll(); S.ev.push('note','oubo'); S.stage='C'; setRain(true,1);
+  await trial(); await confession(); await epilogue(); theEnd(); return;
+ }
+ if(dbg==='quiz'){
+  dbgGrantAll(); S.stage='B'; setRain(true,1); setBGM('calm'); setScene('ima');
+  await quiz();
+  S.phase='roam';
+  while(S.phase==='roam'){ const c=await waitCommand(buildCmds()); await c.run(); await checkTriggers(); }
+  setBar([]);
+  await trial(); await confession(); await epilogue(); theEnd(); return;
+ }
+ await intro();
+ await investigation();
+ await trial();
+ await confession();
+ await epilogue();
+ theEnd();
+}
+main();
+</script>
+</body>
+</html>
