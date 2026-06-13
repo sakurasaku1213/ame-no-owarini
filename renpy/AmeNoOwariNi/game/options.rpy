@@ -23,10 +23,6 @@ define config.window_icon = "images/icon_note.png"
 ## Esc・右クリックで開くのは自作の簡易設定画面（音量・演出・やり直し・終了）
 define _game_menu_screen = "settingsscr"
 
-## メニュー中も直前のセリフのウィンドウを残す（黒帯化を防ぐ）。
-## 既定では "menu" でも window が隠れるが、それを外して直前の一行を出したままにする。
-define config.window = "auto"
-define config.window_auto_hide = ["scene", "call screen", "say-centered", "say-bubble"]
 
 ## 演出ひかえめ（フラッシュ・揺れの軽減）と周回フラグ
 default persistent.lowflash = False
