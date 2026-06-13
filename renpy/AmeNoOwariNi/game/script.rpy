@@ -104,7 +104,7 @@ label menu_dai:
 label move_menu:
     python:
         _dest = pick([(LOCNAME[l] + "へ", l) for l in ["shosai", "ima", "dai"] if l != loc])
-    if _dest is None:
+    if _dest == "__cancel__":
         return
     $ loc = _dest
     $ _ln = LOCNAME[_dest]

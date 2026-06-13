@@ -114,8 +114,10 @@ init python:
         return "◆" * lives + "◇" * max(0, 5 - lives)
 
     def pick(opts):
-        """動的な選択メニュー（「やめる」付き）。値を返す。"""
-        return renpy.display_menu(list(opts) + [("やめる", None)])
+        """動的な選択メニュー（「やめる」付き）。値を返す。
+        ※Ren'Pyでは値がNoneの項目は『選択できない見出し(caption)』になるため、
+        　キャンセルにはNoneではなく "__cancel__" を使う（呼び出し側はこの値を無視）。"""
+        return renpy.display_menu(list(opts) + [("やめる", "__cancel__")])
 
     def remaining_tasks():
         """現在の調査段階で残っているやることのリスト。考える／熊井のヒントの共通材料。"""
