@@ -14,7 +14,7 @@ label start:
     play ambient "audio/rain.wav" loop fadein 2.0
     call screen titlescr
     play sound "audio/select.wav"
-    play music "audio/bgm_calm.wav" loop fadein 2.0
+    play music "audio/bgm_calm.ogg" loop fadein 2.0
     jump intro
 
 ################################################################ オープニング

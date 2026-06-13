@@ -42,7 +42,7 @@ init python:
 ################################################################ 尋問エンジン
 
 label trial:
-    play music "audio/bgm_tense.wav" loop
+    play music "audio/bgm_tense.ogg" loop
     scene bg ima with dissolve
     show rain_ima as rain
     $ lives = 5
@@ -334,7 +334,7 @@ label r3_ok:
 ################################################################ 自白
 
 label confession:
-    play music "audio/bgm_sad.wav" loop fadein 2.0
+    play music "audio/bgm_sad.ogg" loop fadein 2.0
     "水原は、しばらく床を見つめていた。やがて――ぽつりと、笑った。"
     show bust mizuhara at bustpos
     miz "「……はは。……ずっと、信じてたんですよ。落選にも、意味があるって」"
@@ -369,6 +369,6 @@ label epilogue:
     "濡れた街に、月が出ていた。長い雨の季節が、終わろうとしていた。"
     $ persistent.cleared = True
     stop music fadeout 3.0
-    play music "audio/bgm_calm.wav" loop fadein 3.0
+    play music "audio/bgm_calm.ogg" loop fadein 3.0
     call screen endscr
     $ renpy.full_restart()
