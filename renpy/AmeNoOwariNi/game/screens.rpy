@@ -74,6 +74,9 @@ screen choice(items):
 screen confirm(message, yes_action, no_action):
     modal True
     zorder 300
+    ## Esc／右クリックは「いいえ」と同じ＝この確認ダイアログを閉じる。
+    ## これが無いと、下のゲームメニュー(設定)へ貫通してしまう。
+    key "game_menu" action no_action
     add Solid("#000000aa")
     frame:
         align (.5, .5)
