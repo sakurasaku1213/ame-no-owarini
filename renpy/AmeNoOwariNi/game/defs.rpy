@@ -1,12 +1,23 @@
 ## 登場人物・証拠データ・画像・ヘルパー定義
 
-define hai = Character("灰崎", color="#e8e3d3")
-define kum = Character("熊井警部", color="#d9a05b")
-define kay = Character("佳代子", color="#7fb6a4")
-define tab = Character("田淵", color="#9aa7c7")
-define miz = Character("水原", color="#b78bc9")
-define sysc = Character(None, what_color="#d9b36a")
-define narrator = Character(None, what_color="#b9c2d6")
+## クリック待ちマーカー（▼）
+image ctcblink:
+    Text("▼", size=20, color="#d9b36a")
+    xalign 0.985
+    yalign 0.94
+    linear 0.5 alpha 0.15
+    linear 0.5 alpha 1.0
+    repeat
+
+define char_base = Character(None, ctc="ctcblink", ctc_position="fixed")
+
+define hai = Character("灰崎", kind=char_base, color="#e8e3d3")
+define kum = Character("熊井警部", kind=char_base, color="#d9a05b")
+define kay = Character("佳代子", kind=char_base, color="#7fb6a4")
+define tab = Character("田淵", kind=char_base, color="#9aa7c7")
+define miz = Character("水原", kind=char_base, color="#b78bc9")
+define sysc = Character(None, kind=char_base, what_color="#d9b36a")
+define narrator = Character(None, kind=char_base, what_color="#b9c2d6")
 
 ## 背景（1280x505・画面上部に表示。下部215pxはメッセージウィンドウ領域）
 image bg title = "images/bg_title.png"
@@ -20,11 +31,11 @@ image bust kayoko = "images/bust_kayoko.png"
 image bust tabuchi = "images/bust_tabuchi.png"
 image bust mizuhara = "images/bust_mizuhara.png"
 
-## バストアップの定位置（背景の下端に足を揃える）
+## バストアップの定位置（腰がメッセージ窓の裏に隠れ、頭が上に来る立ち絵配置）
 transform bustpos:
     xalign 0.5
     yanchor 1.0
-    ypos 505
+    ypos 726
 
 ## 雨のフェードアウト用（自白シーンで使う）
 transform tfadeout(d=4.0):
@@ -38,6 +49,7 @@ default stage = "A"       # 調査段階 A → B → C → TRIAL
 default loc = "shosai"    # 現在地
 default cur_round = "R1"  # 尋問の現在ラウンド
 default st_idx = 0        # 表示中の証言番号
+default quiz_miss = 0     # 中間推理の誤答回数（ヒント漸増用）
 
 init python:
     LOCNAME = {"shosai": "書斎", "ima": "居間", "dai": "台所"}
@@ -92,7 +104,7 @@ init python:
         return "　✓" if eid in ev else ""
 
     def fchk(f):
-        return "✓ " if f in flg else ""
+        return "　✓" if f in flg else ""
 
     def setf(f):
         if f not in flg:
@@ -104,6 +116,34 @@ init python:
     def pick(opts):
         """動的な選択メニュー（「やめる」付き）。値を返す。"""
         return renpy.display_menu(list(opts) + [("やめる", None)])
+
+    def remaining_tasks():
+        """現在の調査段階で残っているやることのリスト。考える／熊井のヒントの共通材料。"""
+        rest = []
+        if stage == "A":
+            if "isho" not in ev:
+                rest.append("机の封筒")
+            if "cup" not in ev:
+                rest.append("珈琲カップ")
+            if "pen" not in ev:
+                rest.append("万年筆")
+            if "wapro" not in ev:
+                rest.append("ワープロ")
+        elif stage == "B":
+            if not ("k1" in flg and "k2" in flg and "k3" in flg):
+                rest.append("奥さんの話をもっと聞く")
+            if not ("t1" in flg and "t2" in flg):
+                rest.append("編集者の田淵に当たる")
+            if not ("m1" in flg and "m2" in flg):
+                rest.append("弟子の水原に当たる")
+            if "sink" not in ev:
+                rest.append("台所も覗いておく")
+        else:
+            if "note" not in ev:
+                rest.append("机の引き出し")
+            if "oubo" not in ev:
+                rest.append("書棚の奥")
+        return rest
 
 ## 証拠入手の共通処理
 label get_ev(eid):

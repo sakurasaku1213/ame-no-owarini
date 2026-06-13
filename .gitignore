@@ -12,3 +12,8 @@ renpy/AmeNoOwariNi/tmp/
 # OS
 Thumbs.db
 desktop.ini
+
+# temp / local
+_extract.js
+lint_out.txt
+.claude/

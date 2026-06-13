@@ -15,14 +15,14 @@ init python:
                  "press": "r1s3_press", "ok": "isho", "okl": "r1_ok",
                  "near": {"wapro": "r1s3_near_wapro"}},
                 {"t": "「でも怖くて、書斎には一歩も入れませんでした。あとは奥様のそばで、警察を待っただけです」",
-                 "press": "r1s4_press", "near": {"sink": "r1s4_near_sink"}},
+                 "press": "r1s4_press", "near": {"sink": "r1s4_near_sink", "cup": "r1s4_near_cup"}},
             ]},
         "R2": {
             "intro": "r2_intro",
             "sts": [
                 {"t": "「遺書のことは、あとで廊下で、奥様から聞いたんです。だから知っていた。それだけだ」",
                  "press": "r2s1_press", "ok": "memo_k", "okl": "r2_ok",
-                 "near": {"isho": "r2s1_near_isho"}},
+                 "near": {"isho": "r2s1_near_isho", "wapro": "r2s1_near_wapro", "memo_t": "r2s1_near_memot"}},
                 {"t": "「動転してたんですよ。あの晩のことは、細かいことまで覚えちゃいない」",
                  "press": "r2s2_press"},
                 {"t": "「……とにかく！　僕はそれ以上、何も知りません」",
@@ -55,7 +55,9 @@ label trial:
     hide bust
     hai "（さあ、始めようか。――嘘は必ず、どこかで軋む）"
     sysc "◆証言を読み、怪しければ「ゆさぶる」。矛盾を見つけたら、その証言に「証拠をつきつける」。"
-    sysc "◆見当違いの証拠を出すとライフ（◆）が減る。ゼロになれば、追及は振り出しだ。"
+    sysc "◆見当違いの証拠はライフ（◆）が減る。ゼロになっても、いまの証言の頭からやり直せる。"
+    sysc "◆キー操作：←→で証言移動、Ｚでゆさぶる、Ｘでつきつける、Ｎで手帳。"
+    $ renpy.block_rollback()
     $ cur_round = "R1"
     call run_round
     $ cur_round = "R2"
@@ -75,23 +77,21 @@ label round_loop:
     show bust mizuhara at bustpos
     $ _act = renpy.call_screen("testimony", stxt=_st["t"], idx=st_idx + 1, total=len(_rd["sts"]))
     if _act == "prev":
-        play sound "audio/select.wav"
         $ st_idx = (st_idx - 1) % len(_rd["sts"])
         jump round_loop
     elif _act == "next":
-        play sound "audio/select.wav"
         $ st_idx = (st_idx + 1) % len(_rd["sts"])
         jump round_loop
     elif _act == "notebook":
         call screen notebook()
         jump round_loop
     elif _act == "press":
-        play sound "audio/select.wav"
+        call do_flash("待った！", True)
         call expression _st["press"]
         jump round_loop
     ## 証拠をつきつける
     $ _eid = renpy.call_screen("notebook", select=True, prompt="どの証拠をつきつける？")
-    if _eid is None:
+    if _eid == "__cancel__":
         jump round_loop
     $ _st = TRIAL[cur_round]["sts"][st_idx]
     if _st.get("ok") == _eid:
@@ -108,18 +108,21 @@ label round_loop:
             call gameover_seq
         jump round_loop
 
-label do_flash(txt):
+label do_flash(txt, small=False):
     play sound "audio/slam.wav"
-    $ renpy.show_screen("flashscr", txt=txt)
-    with hpunch
-    $ renpy.pause(0.85, hard=True)
+    $ renpy.show_screen("flashscr", txt=txt, dim=(small or persistent.lowflash))
+    if not small and not persistent.lowflash:
+        with hpunch
+    $ renpy.pause(0.45 if small else 0.85, hard=True)
     $ renpy.hide_screen("flashscr")
     return
 
 label wrong_present:
     $ lives -= 1
+    $ renpy.block_rollback()
     play sound "audio/buzz.wav"
-    with vpunch
+    if not persistent.lowflash:
+        with vpunch
     show bust mizuhara at bustpos
     miz "「……それが、何か？　僕の話と、何の関係があるんです」"
     show bust kumai at bustpos
@@ -203,6 +206,14 @@ label r1s4_near_sink:
     hai "（はぐらかされた。……外堀じゃない、本丸を突くべきだ）"
     return
 
+label r1s4_near_cup:
+    hai "「毒は、机のこのカップから出た」"
+    show bust mizuhara at bustpos
+    miz "「……先生がご自分で口にされたものでしょう。僕が書斎に入っていない以上、関係のない話だ」"
+    hide bust
+    hai "（毒の出どころは確かだ。だが“誰が入れたか”までは語らない……。こいつの『見た』という言葉のほうが怪しい）"
+    return
+
 label r1_ok:
     hai "「『ワープロ打ちの遺書が見えた』――確かにそう言ったな、水原さん」"
     hai "「だがこの遺書は、封のされた封筒の中にあった。開けたのは警察の鑑識、九時四十分だ」"
@@ -234,6 +245,21 @@ label r2s1_press:
 label r2s1_near_isho:
     hai "（遺書そのものをもう一度突きつけても、堂々巡りだ）"
     hai "（『奥様から聞いた』という言い訳――それを直接潰す“証言”があるはずだ）"
+    return
+
+label r2s1_near_wapro:
+    show bust mizuhara at bustpos
+    miz "「それで遺書が打たれたんでしょう？　僕は毎日使ってる。……だから、何です？」"
+    hide bust
+    hai "（道具は語らない、か。……“誰から聞いたのか”という嘘そのものを、証言で潰すべきだ）"
+    return
+
+label r2s1_near_memot:
+    hai "「田淵もまだ、遺書のことは何ひとつ知らされていなかった」"
+    show bust mizuhara at bustpos
+    miz "「な、なら、なおさら奥様から聞いたんですよ」"
+    hide bust
+    hai "（外堀は埋まった。残るは“奥様から”の一点……それを直接潰す証言だ）"
     return
 
 label r2s2_press:
@@ -340,6 +366,7 @@ label epilogue:
     hide bust
     hai "「いや――いつか出るさ。今度は、正しい名前でな」"
     "濡れた街に、月が出ていた。長い雨の季節が、終わろうとしていた。"
+    $ persistent.cleared = True
     stop music fadeout 3.0
     play music "audio/bgm_calm.wav" loop fadein 3.0
     call screen endscr

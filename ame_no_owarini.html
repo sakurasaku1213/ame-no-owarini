@@ -17,6 +17,9 @@ body{background:#06080f; color:var(--ink);
 button{font-family:inherit; background:#141b2c; color:var(--ink); border:1px solid #3a4663;
  border-radius:4px; padding:7px 14px; font-size:15px; cursor:pointer; letter-spacing:.08em}
 button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
+button:disabled{opacity:.35; cursor:default}
+button:disabled:hover{background:#141b2c; border-color:#3a4663; color:var(--ink)}
+#game.adv #msg, #game.adv #stage{cursor:pointer}
 .hbtn{padding:3px 10px; font-size:12.5px}
 #stage{position:relative; width:100%; aspect-ratio:760/300; background:#000;
  border:1px solid #2a3349; border-radius:6px 6px 0 0; overflow:hidden}
@@ -35,10 +38,12 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
 #itemget .igIcon{width:46px; height:46px; margin:0 auto 6px}
 #itemget .igIcon svg{width:100%; height:100%}
 #itemget .igName{color:var(--gold); font-size:16px; letter-spacing:.15em; margin-bottom:4px}
-#itemget .igDesc{font-size:12.5px; color:#c9cfdd; line-height:1.7}
+#itemget .igDesc{font-size:14.5px; color:#c9cfdd; line-height:1.7}
+#itemget .igTap{font-size:11.5px; color:#8a93a8; margin-top:6px}
 #choice{position:absolute; left:50%; bottom:8px; transform:translateX(-50%); display:none;
- flex-direction:column; gap:5px; z-index:20; min-width:48%; max-width:92%}
-#choice button{background:rgba(11,16,29,.95); font-size:14.5px; padding:5px 16px; text-align:left}
+ flex-direction:column; gap:5px; z-index:20; min-width:48%; max-width:92%;
+ max-height:calc(100% - 16px); overflow-y:auto}
+#choice button{background:rgba(11,16,29,.95); font-size:14.5px; padding:5px 16px; text-align:left; flex:none}
 #flash{position:absolute; inset:0; background:#f3ecd8; display:none; align-items:center;
  justify-content:center; z-index:30}
 #flash span{font-size:52px; font-weight:bold; color:#15182a; letter-spacing:.18em;
@@ -49,7 +54,7 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
 #title h1{font-size:40px; letter-spacing:.3em; text-indent:.3em; color:#f0e8d4;
  text-shadow:0 0 18px rgba(120,160,220,.35); font-weight:600}
 #title .sub{font-size:13px; color:#9aa6bd; letter-spacing:.3em}
-#title .note{font-size:11.5px; color:#6b7690; letter-spacing:.15em}
+#title .note{font-size:12.5px; color:#8a93a8; letter-spacing:.12em; line-height:1.9}
 #title button{margin-top:8px; padding:9px 36px; font-size:16px}
 #endscr h1{font-size:64px; letter-spacing:.2em; color:#e8e0c8}
 #endscr .sub{font-size:14px; color:#9aa6bd; letter-spacing:.35em}
@@ -72,20 +77,31 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
  border:1px solid #5a6a8c; border-radius:8px; padding:14px 16px}
 #nbHead{display:flex; align-items:center; gap:10px; margin-bottom:10px}
 #nbHead b{color:var(--gold); letter-spacing:.2em; font-size:15px}
-#nbPrompt{font-size:12.5px; color:#d98c6a; flex:1}
+#nbPrompt{font-size:13.5px; color:#d98c6a; flex:1}
 .evgrid{display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px}
 .evitem{display:flex; gap:9px; align-items:center; border:1px solid #2e3a55; border-radius:6px;
- padding:6px 8px; cursor:pointer; background:#0d1321; font-size:13.5px}
-.evitem:hover{border-color:var(--gold)}
-.evitem.sel{border-color:var(--gold); background:#1a2238}
+ padding:6px 8px; cursor:pointer; background:#0d1321; font-size:13.5px;
+ font-family:inherit; color:var(--ink); text-align:left; width:100%}
+.evitem:hover{border-color:var(--gold); background:#0d1321}
+.evitem.sel, .evitem.sel:hover{border-color:var(--gold); background:#243458}
 .evicon{width:34px; height:34px; flex:none}
 .evicon svg{width:100%; height:100%}
 #evdetail{display:none; gap:12px; border-top:1px solid #2e3a55; padding-top:10px}
 #evdIcon{width:54px; height:54px; flex:none}
 #evdIcon svg{width:100%; height:100%}
 #evdName{color:var(--gold); font-size:15px; letter-spacing:.12em; margin-bottom:4px}
-#evdDesc{font-size:13px; line-height:1.8; color:#ccd3e2; white-space:pre-line}
+#evdDesc{font-size:15px; line-height:1.8; color:#ccd3e2; white-space:pre-line}
 #evdUse{display:none; margin-top:8px; border-color:#a85a4a; color:#f0c8b0}
+#histmodal{position:fixed; inset:0; background:rgba(0,0,0,.72); display:none;
+ align-items:center; justify-content:center; z-index:50}
+#histbox{width:min(92vw,620px); max-height:84vh; display:flex; flex-direction:column;
+ background:#11182a; border:1px solid #5a6a8c; border-radius:8px; padding:14px 16px}
+#histHead{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+#histHead b{color:var(--gold); letter-spacing:.2em; font-size:15px}
+#histHead .sp{flex:1}
+#histlist{overflow-y:auto; font-size:14.5px; line-height:1.85}
+#histlist .hl{padding:3px 0; border-bottom:1px dashed #232c44}
+#histlist .hn{color:var(--gold); margin-right:8px}
 @media (max-width:520px){ #title h1{font-size:30px} #msg{font-size:15px} }
 </style>
 </head>
@@ -95,6 +111,7 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
   <span>雨の終わりに ― 私立探偵・灰崎の事件簿 ―</span>
   <span class="sp"></span>
   <span id="lives"></span>
+  <button class="hbtn" id="hdrHist">履歴</button>
   <button class="hbtn" id="hdrNb">手帳</button>
   <button class="hbtn" id="hdrSnd">音：オン</button>
  </div>
@@ -103,13 +120,13 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
   <canvas id="raincv"></canvas>
   <div id="bust"></div>
   <div id="clicker"></div>
-  <div id="itemget"><div class="igIcon"></div><div class="igName"></div><div class="igDesc"></div></div>
+  <div id="itemget"><div class="igIcon"></div><div class="igName"></div><div class="igDesc"></div><div class="igTap">― クリックで閉じる ―</div></div>
   <div id="choice"></div>
   <div id="flash"><span></span></div>
   <div id="title">
    <div class="sub">― 私立探偵・灰崎の事件簿 ―</div>
    <h1>雨の終わりに</h1>
-   <div class="note">クリック／Enterで読み進める　＊プレイ時間 約10分</div>
+   <div class="note" id="tnote">クリック／Enter：進む　Ctrl：早送り<br>ホイール上：履歴を見る　＊プレイ時間 約10分</div>
    <button id="btnStart">調査をはじめる</button>
   </div>
   <div id="endscr">
@@ -125,6 +142,10 @@ button:hover{background:#1d2740; border-color:var(--gold); color:#f6edd8}
  </div>
  <div id="bar"></div>
 </div>
+<div id="histmodal"><div id="histbox">
+ <div id="histHead"><b>これまでの話</b><span class="sp"></span><button class="hbtn" id="histClose">閉じる</button></div>
+ <div id="histlist"></div>
+</div></div>
 <div id="modal"><div id="nb">
  <div id="nbHead"><b>探偵手帳</b><span id="nbPrompt"></span><button class="hbtn" id="nbClose">閉じる</button></div>
  <div class="evgrid" id="evgrid"></div>
@@ -210,7 +231,7 @@ function thunder(delay){
  lp.frequency.setValueAtTime(170,t0); lp.frequency.exponentialRampToValueAtTime(55,t0+2.6);
  const g=a.createGain();
  g.gain.setValueAtTime(.0001,t0);
- g.gain.exponentialRampToValueAtTime(.26,t0+.18);
+ g.gain.exponentialRampToValueAtTime(.14,t0+.18);
  g.gain.exponentialRampToValueAtTime(.0001,t0+2.9);
  src.connect(lp); lp.connect(g); g.connect(a.destination);
  src.start(t0); src.stop(t0+3);
@@ -441,7 +462,7 @@ function rainFrame(now){
    }
    rain.boltT+=dt;
    const p=x=>x>=0?Math.exp(-x*16):0;
-   bolt=Math.min(.8,.55*p(rain.boltT)+.8*p(rain.boltT-.13)+.3*p(rain.boltT-.32));
+   bolt=Math.min(RM?.4:.8,.55*p(rain.boltT)+.8*p(rain.boltT-.13)+.3*p(rain.boltT-.32));
   }
   rctx.save();
   rctx.beginPath();
@@ -635,29 +656,55 @@ const EV={
 };
 const S={ phase:'title', loc:'shosai', stage:'A', flags:{}, ev:[], lives:5, sound:true };
 /* ========== 表示エンジン ========== */
-let typing=false, fastSkip=false, advResolve=null;
-function clickerOn(b){ clicker.style.display=b?'block':'none'; }
-clicker.addEventListener('click',()=>{
+let typing=false, fastSkip=false, advResolve=null, ctrlDown=false, lastTypeDone=0, trialResolve=null;
+const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+function clickerOn(b){ clicker.style.display=b?'block':'none'; el('game').classList.toggle('adv',b); }
+function doAdv(){
  if(typing){ fastSkip=true; return; }
- if(advResolve){ const r=advResolve; advResolve=null; clickerOn(false); r(); }
-});
+ if(advResolve){
+  if(!ctrlDown && performance.now()-lastTypeDone<160) return; /* 連打での未読送り防止 */
+  const r=advResolve; advResolve=null; clickerOn(false); r();
+ }
+}
+clicker.addEventListener('click',doAdv);
+el('msg').addEventListener('click',doAdv);
+barEl.addEventListener('click',e=>{ if(e.target===barEl) doAdv(); });
+function modalOpen(){ return modal.style.display==='flex' || el('histmodal').style.display==='flex'; }
+function autoAdv(){ setTimeout(()=>{ if(ctrlDown&&advResolve&&!typing&&!modalOpen()){ const r=advResolve; advResolve=null; clickerOn(false); r(); } },70); }
 document.addEventListener('keydown',e=>{
+ if(e.key==='Control'){ ctrlDown=true; if(typing) fastSkip=true; if(advResolve) autoAdv(); return; }
+ if(el('histmodal').style.display==='flex'){ if(e.key==='Escape') closeHist(); return; }
+ if(modal.style.display==='flex'){ if(e.key==='Escape') nbFinish(null); return; }
  if(e.key==='Enter'||e.key===' '){
-  if(clicker.style.display==='block'){ e.preventDefault(); clicker.click(); }
+  if(e.repeat) return;
+  if(clicker.style.display==='block'){ e.preventDefault(); doAdv(); }
+  return;
+ }
+ if(choiceEl.style.display==='flex' && /^[1-9]$/.test(e.key)){
+  const b=choiceEl.children[+e.key-1]; if(b) b.click(); return;
+ }
+ if(trialResolve){
+  const map={ArrowLeft:'prev', ArrowRight:'next', z:'press', Z:'press', x:'present', X:'present'};
+  if(map[e.key]){ sfxSel(); trialResolve(map[e.key]); }
  }
 });
-function waitAdv(){ return new Promise(r=>{ advResolve=r; clickerOn(true); }); }
-async function typeText(text,color){
+document.addEventListener('keyup',e=>{ if(e.key==='Control') ctrlDown=false; });
+window.addEventListener('blur',()=>{ ctrlDown=false; });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) ctrlDown=false; });
+function waitAdv(){ return new Promise(r=>{ advResolve=r; clickerOn(true); if(ctrlDown) autoAdv(); }); }
+async function typeText(text,color,instant){
  typing=true; fastSkip=false; clickerOn(true);
  txtEl.style.color=color||'#efe9da';
  txtEl.textContent='';
- for(let i=0;i<text.length;i++){
-  if(fastSkip) break;
-  txtEl.textContent+=text[i];
-  if(i%3===0) blip();
-  await sleep(22);
+ if(!instant){
+  for(let i=0;i<text.length;i++){
+   if(fastSkip||ctrlDown) break;
+   txtEl.textContent+=text[i];
+   if(i%3===0) blip();
+   await sleep(22);
+  }
  }
- txtEl.textContent=text; typing=false;
+ txtEl.textContent=text; typing=false; lastTypeDone=performance.now();
 }
 function setBust(id){
  if(!id){ bustEl.classList.remove('on'); return; }
@@ -667,6 +714,7 @@ function setBust(id){
 function setScene(id){ S.loc=id; bgEl.innerHTML=BGS[id](); setBust(null); rainScene(id); }
 async function say(who,text){
  const c=CH[who]||{};
+ pushHist(c.name||'', text);
  if(c.name){ nameEl.textContent=c.name; nameEl.style.color=c.color||'#e8e3d3'; nameEl.style.display='inline-block'; }
  else nameEl.style.display='none';
  setBust(c.bust||null);
@@ -679,13 +727,15 @@ async function seq(lines){ for(const L of lines) await say(L[0],L[1]); }
 function choose(opts){
  return new Promise(r=>{
   choiceEl.innerHTML='';
+  if(bustEl.classList.contains('on')) bustEl.style.opacity='.25';
   opts.forEach((o,i)=>{
    const b=document.createElement('button');
    b.textContent=o;
-   b.onclick=()=>{ sfxSel(); choiceEl.style.display='none'; r(i); };
+   b.onclick=()=>{ sfxSel(); choiceEl.style.display='none'; bustEl.style.opacity=''; r(i); };
    choiceEl.appendChild(b);
   });
   choiceEl.style.display='flex';
+  choiceEl.scrollTop=0;
  });
 }
 function setBar(items){
@@ -704,7 +754,7 @@ function waitCommand(cmds){
 }
 async function getEv(id){
  if(S.ev.includes(id)) return;
- S.ev.push(id); sfxDing();
+ S.ev.push(id); updHdr(); sfxDing();
  ig.querySelector('.igIcon').innerHTML=ICONS[id];
  ig.querySelector('.igName').textContent='『'+EV[id].name+'』を手帳に記録した';
  ig.querySelector('.igDesc').textContent=EV[id].short;
@@ -717,7 +767,8 @@ let nbResolve=null, nbSel=null;
 function renderGrid(){
  const g=el('evgrid'); g.innerHTML='';
  S.ev.forEach(id=>{
-  const d=document.createElement('div');
+  const d=document.createElement('button');
+  d.type='button';
   d.className='evitem'+(nbSel===id?' sel':'');
   d.innerHTML='<div class="evicon">'+ICONS[id]+'</div><div>'+EV[id].name+'</div>';
   d.onclick=()=>{ sfxSel(); nbDetail(id); };
@@ -745,10 +796,39 @@ function openNotebook(mode,prompt){
  });
 }
 function nbFinish(val){
+ sfxSel();
  modal.style.display='none';
  const r=nbResolve; nbResolve=null;
  if(r) r(val);
 }
+modal.addEventListener('click',e=>{ if(e.target===modal) nbFinish(null); });
+/* 履歴（バックログ） */
+const histArr=[];
+function pushHist(name,text){ histArr.push([name,text]); if(histArr.length>150) histArr.shift(); }
+function openHist(){
+ if(modal.style.display==='flex') return;
+ const list=el('histlist'); list.innerHTML='';
+ if(!histArr.length) list.textContent='まだ、何も起きていない。';
+ for(const h of histArr){
+  const d=document.createElement('div'); d.className='hl';
+  if(h[0]){ const s=document.createElement('span'); s.className='hn'; s.textContent=h[0]; d.appendChild(s); }
+  d.appendChild(document.createTextNode(h[1]));
+  list.appendChild(d);
+ }
+ el('histmodal').style.display='flex';
+ list.scrollTop=list.scrollHeight;
+}
+function closeHist(){ el('histmodal').style.display='none'; }
+el('histClose').onclick=closeHist;
+el('hdrHist').onclick=()=>{ sfxSel(); openHist(); };
+el('histmodal').addEventListener('click',e=>{ if(e.target===el('histmodal')) closeHist(); });
+el('game').addEventListener('wheel',e=>{
+ if(e.ctrlKey) return; /* ブラウザのズーム操作を邪魔しない */
+ if(e.deltaY<0 && clicker.style.display==='block'
+  && modal.style.display!=='flex' && el('histmodal').style.display!=='flex') openHist();
+},{passive:true});
+function updHdr(){ el('hdrNb').disabled = S.ev.length===0; }
+updHdr();
 el('nbClose').onclick=()=>nbFinish(null);
 el('evdUse').onclick=()=>{ if(nbSel) nbFinish(nbSel); };
 el('hdrNb').onclick=()=>{
@@ -761,11 +841,12 @@ el('hdrSnd').onclick=function(){
  this.textContent=S.sound?'音：オン':'音：オフ';
  if(AC){ if(S.sound) AC.resume(); else AC.suspend(); }
 };
-async function flash(text){
+async function flash(text,small){
  flashEl.querySelector('span').textContent=text;
+ flashEl.style.opacity = (small||RM)?'.82':'1';
  flashEl.style.display='flex'; sfxSlam();
- stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
- await sleep(820);
+ if(!small && !RM){ stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); }
+ await sleep(small?420:820);
  flashEl.style.display='none';
 }
 function updLives(){
@@ -804,19 +885,19 @@ function hotspots(){
    {label:'万年筆と原稿用紙'+(S.ev.includes('pen')?' ✓':''), run:hsPen},
    {label:'ワープロ'+(S.ev.includes('wapro')?' ✓':''), run:hsWapro},
    {label:'書棚'+(S.ev.includes('oubo')?' ✓':''), run:hsShodana},
-   {label:'窓', run:hsMado}
+   {label:'窓'+(F.sMado?' ✓':''), run:hsMado}
   ];
   if(S.stage==='C') h.splice(1,0,{label:'机の引き出し'+(S.ev.includes('note')?' ✓':''), run:hsDrawer});
   return h;
  }
  if(S.loc==='ima') return [
-  {label:'応接の卓', run:async()=>{ await say('n','湯呑が三つ。茶は、とうに冷めきっている。誰も口をつけた様子はない。'); }},
-  {label:'窓', run:async()=>{ await say('n','雨はまだ止まない。庭の灯籠が、ぼんやりと滲んで見えた。'); }}
+  {label:'応接の卓'+(F.iTaku?' ✓':''), run:async()=>{ S.flags.iTaku=1; await say('n','湯呑が三つ。茶は、とうに冷めきっている。誰も口をつけた様子はない。'); }},
+  {label:'窓'+(F.iMado?' ✓':''), run:async()=>{ S.flags.iMado=1; await say('n','雨はまだ止まない。庭の灯籠が、ぼんやりと滲んで見えた。'); }}
  ];
  return [
   {label:'流し（水切りカゴ）'+(S.ev.includes('sink')?' ✓':''), run:hsSink},
-  {label:'勝手口', run:async()=>{ await say('n','勝手口の鍵は、内側から掛かっている。……出入りした者は、玄関を通ったことになる。'); }},
-  {label:'食器棚', run:async()=>{ await say('n','客用のカップが行儀よく並んでいる。一客分、間が空いているように見えるのは――気のせいか。'); }}
+  {label:'勝手口'+(F.dKatte?' ✓':''), run:async()=>{ S.flags.dKatte=1; await say('n','勝手口の鍵は、内側から掛かっている。……出入りした者は、玄関を通ったことになる。'); }},
+  {label:'食器棚'+(F.dShokki?' ✓':''), run:async()=>{ S.flags.dShokki=1; await say('n','客用のカップが行儀よく並んでいる。一客分、間が空いているように見えるのは――気のせいか。'); }}
  ];
 }
 async function hsIsho(){
@@ -880,6 +961,7 @@ async function hsDrawer(){
  await getEv('note');
 }
 async function hsMado(){
+ S.flags.sMado=1;
  await seq([
   ['n','窓の鍵は、内側から掛かっている。窓の外は篠突く雨。'],
   ['kumai','「出入りは廊下側の扉だけだ。鍵は掛かっていなかった」']
@@ -994,7 +1076,7 @@ async function doTalk(){
  }
  const tp=topicsOf(p);
  if(!tp){ await hint(); return; }
- const i=await choose([...tp.map(t=>(t.done?'✓ ':'')+t.label),'やめる']);
+ const i=await choose([...tp.map(t=>t.label+(t.done?' ✓':'')),'やめる']);
  if(i<tp.length) await tp[i].run();
 }
 async function doMove(){
@@ -1046,6 +1128,11 @@ async function quiz(){
   ['kumai','「遺書はある。毒も即効性。書斎の窓は内鍵、出入りは廊下の扉だけ。家には身内しかいない」'],
   ['kumai','「だがな。――お前の手帳から一つ出せ。『自殺』と食い違うものを、だ」']
  ]);
+ let miss=0;
+ const moreHint=async()=>{
+  miss++;
+  if(miss===3) await say('kumai','「……機械嫌いの男と、活字の遺書。並べてみろ。答えはお前の手帳の中だ」');
+ };
  while(true){
   const id=await openNotebook('select','「自殺」と食い違う証拠は？');
   if(id==='isho'){
@@ -1066,21 +1153,31 @@ async function quiz(){
    await say('kumai','「……そこじゃない気がするな。もう一度だ」');
    continue;
   }
-  if(id==='wapro'){ await say('kumai','「惜しいな。それと『組み合わせて』初めて引っかかる物が、手帳にあるだろう」'); continue; }
-  if(id==='pen'){ await say('kumai','「万年筆か。……悪くない筋だが、まず大本命があるだろう」'); continue; }
+  if(id==='memo_k'||id==='memo_t'){
+   await seq([
+    ['kumai','「いい線だ。証言は揃ってる。……だがな、出すべきは“その証言が刺さる物”のほうだ」'],
+    ['kumai','「机の上にあったろう。佳代子さんの話と、突き合わせてみろ」']
+   ]);
+   await moreHint();
+   continue;
+  }
+  if(id==='wapro'){ await say('kumai','「惜しいな。それと『組み合わせて』初めて引っかかる物が、手帳にあるだろう」'); await moreHint(); continue; }
+  if(id==='pen'){ await say('kumai','「万年筆か。……悪くない筋だが、まず大本命があるだろう」'); await moreHint(); continue; }
   if(id==null){ await say('kumai','「逃げるなよ、灰崎。お前の手帳の中だ」'); continue; }
   await say('kumai','「……それは別に、食い違っちゃおらんだろう」');
+  await moreHint();
  }
 }
 /* ========== 調査メインループ ========== */
 async function investigation(){
  S.phase='roam'; setScene('shosai');
- await seq([
+ const opening=[
   ['n','東山邸、二階の書斎。線香と、冷めた珈琲のにおい。'],
   ['kumai','「来たな。現場はこの書斎だ。仏さんはもう運んだが、ほかはそのままにしてある」'],
-  ['ore','「相変わらず手回しのいいことで」'],
-  ['sys','◆コマンドで調査を進めよう。「調べる」で現場を、「話す」で聞き込みを。困ったら「考える」。']
- ]);
+  ['ore','「相変わらず手回しのいいことで」']
+ ];
+ if(!isCleared()) opening.push(['sys','◆コマンドで調査を進めよう。「調べる」で現場を、「話す」で聞き込みを。困ったら「考える」。']);
+ await seq(opening);
  while(S.phase==='roam'){
   const c=await waitCommand(buildCmds());
   await c.run();
@@ -1091,20 +1188,25 @@ async function investigation(){
 /* ========== 対決パート（尋問） ========== */
 function trialAction(){
  return new Promise(r=>{
-  const mk=(label,val)=>({label, fn:()=>{ sfxSel(); setBar([]); r(val); }});
-  setBar([mk('◀ 前の証言','prev'), mk('次の証言 ▶','next'), mk('ゆさぶる','press'), mk('証拠をつきつける','present')]);
+  const fin=v=>{ trialResolve=null; setBar([]); r(v); };
+  trialResolve=fin;
+  const mk=(label,val)=>({label, fn:()=>{ sfxSel(); fin(val); }});
+  setBar([mk('◀ 前の証言','prev'), mk('次の証言 ▶','next'), mk('ゆさぶる（Ｚ）','press'), mk('証拠をつきつける（Ｘ）','present')]);
  });
 }
+const seenSt=new Set();
 async function showStatement(st,i,n){
  nameEl.textContent='水原の証言　'+(i+1)+'／'+n;
  nameEl.style.color='#9adfae'; nameEl.style.display='inline-block';
  setBust('mizuhara');
- await typeText(st.t,'#9adfae');
+ const seen=seenSt.has(st.t); seenSt.add(st.t);
+ if(!seen) pushHist('水原（証言）', st.t);
+ await typeText(st.t,'#9adfae',seen);
  clickerOn(false);
 }
 async function wrongPresent(){
  S.lives--; updLives(); sfxBuzz();
- stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+ if(!RM){ stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); }
  await seq([
   ['mizuhara','「……それが、何か？　僕の話と、何の関係があるんです」'],
   ['kumai','「（おい灰崎、的を外すな。次はないと思って撃て）」']
@@ -1118,7 +1220,7 @@ async function statementLoop(round){
   const st=round.sts[i];
   if(act==='next'){ i=(i+1)%n; continue; }
   if(act==='prev'){ i=(i-1+n)%n; continue; }
-  if(act==='press'){ await seq(st.press); continue; }
+  if(act==='press'){ await flash('待った！',true); await seq(st.press); continue; }
   // つきつける
   const ev=await openNotebook('select');
   if(ev==null) continue;
@@ -1133,8 +1235,10 @@ async function statementLoop(round){
  }
 }
 async function runRound(round){
+ let first=true;
  while(true){
-  await seq(round.intro);
+  if(first){ await seq(round.intro); first=false; }
+  else await say('sys','◆尋問を再開する。証言は同じだ。――噛み合わない一点を狙え。');
   const res=await statementLoop(round);
   if(res==='ok') return;
   // ゲームオーバー → 同ラウンドやり直し
@@ -1188,7 +1292,11 @@ const R1={
     ['mizuhara','「……家政婦さんでしょう」'],
     ['kumai','「今日は休みだ」'],
     ['mizuhara','「なら、奥様では？　僕じゃありませんよ」'],
-    ['ore','（はぐらかされた。……外堀じゃない、本丸を突くべきだ）']]}}
+    ['ore','（はぐらかされた。……外堀じゃない、本丸を突くべきだ）']],
+   cup:[
+    ['ore','「毒は、机のこのカップから出た」'],
+    ['mizuhara','「……先生がご自分で口にされたものでしょう。僕が書斎に入っていない以上、関係のない話だ」'],
+    ['ore','（毒の出どころは確かだ。だが“誰が入れたか”までは語らない……。こいつの『見た』という言葉のほうが怪しい）']]}}
  ]
 };
 const R2={
@@ -1210,7 +1318,14 @@ const R2={
     ['mizuhara','「ぼ、僕じゃない……僕じゃ……」']],
    near:{isho:[
     ['ore','（遺書そのものをもう一度突きつけても、堂々巡りだ）'],
-    ['ore','（『奥様から聞いた』という言い訳――それを直接潰す“証言”があるはずだ）']]}},
+    ['ore','（『奥様から聞いた』という言い訳――それを直接潰す“証言”があるはずだ）']],
+   wapro:[
+    ['mizuhara','「それで遺書が打たれたんでしょう？　僕は毎日使ってる。……だから、何です？」'],
+    ['ore','（道具は語らない、か。……“誰から聞いたのか”という嘘そのものを、証言で潰すべきだ）']],
+   memo_t:[
+    ['ore','「田淵もまだ、遺書のことは何ひとつ知らされていなかった」'],
+    ['mizuhara','「な、なら、なおさら奥様から聞いたんですよ」'],
+    ['ore','（外堀は埋まった。残るは“奥様から”の一点……それを直接潰す証言だ）']]}},
   {t:'「動転してたんですよ。あの晩のことは、細かいことまで覚えちゃいない」',
    press:[
     ['mizuhara','「あなただって、恩人の死体を見れば分かりますよ」'],
@@ -1256,7 +1371,8 @@ async function trial(){
   ['mizuhara','「……何度でも。でも、まるで尋問ですね」'],
   ['ore','（さあ、始めようか。――嘘は必ず、どこかで軋む）'],
   ['sys','◆証言を読み、怪しければ「ゆさぶる」。矛盾を見つけたら、その証言に「証拠をつきつける」。'],
-  ['sys','◆見当違いの証拠を出すとライフ（◆）が減る。ゼロになれば、追及は振り出しだ。']
+  ['sys','◆見当違いの証拠はライフ（◆）が減る。ゼロになっても、いまの証言の頭からやり直せる。'],
+  ['sys','◆キー操作：←→で証言移動、Ｚでゆさぶる、Ｘでつきつける。']
  ]);
  await runRound(R1);
  await runRound(R2);
@@ -1294,7 +1410,9 @@ async function epilogue(){
   ['n','濡れた街に、月が出ていた。長い雨の季節が、終わろうとしていた。']
  ]);
 }
+function isCleared(){ try{ return !!localStorage.getItem('ame_clear'); }catch(e){ return false; } }
 function theEnd(){
+ try{ localStorage.setItem('ame_clear','1'); }catch(e){}
  setBGM('calm'); setBust(null);
  nameEl.style.display='none'; txtEl.textContent=''; curEl.style.display='none';
  el('endscr').style.display='flex';
@@ -1303,11 +1421,13 @@ el('btnAgain').onclick=()=>location.reload();
 /* ========== メイン ========== */
 function dbgGrantAll(){
  ['isho','cup','pen','wapro','sink','memo_k','memo_t'].forEach(id=>{ if(!S.ev.includes(id)) S.ev.push(id); });
+ updHdr();
  Object.assign(S.flags,{k1:1,k2:1,k3:1,t1:1,t2:1,m1:1,m2:1,unlockMove:1});
  EV.wapro.desc+='\n先生は大の機械嫌いで、このワープロに触ることはなかった（佳代子の証言）。清書はすべて水原の仕事。';
 }
 async function main(){
  setScene('title');
+ if(isCleared()) el('tnote').innerHTML+='<br>※2周目：Ctrl押しっぱなしで高速スキップ';
  el('title').style.display='flex';
  await new Promise(r=>{ el('btnStart').onclick=()=>{ ac(); r(); }; });
  el('title').style.display='none';

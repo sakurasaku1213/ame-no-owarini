@@ -6,6 +6,9 @@ label start:
     $ lives = 5
     $ stage = "A"
     $ loc = "shosai"
+    ## 設定画面の「最初からやり直す」で尋問中から戻った場合の後始末
+    hide screen lives_hud
+    stop music fadeout 1.0
     scene bg title
     show rain_title as rain
     play ambient "audio/rain.wav" loop fadein 2.0
@@ -37,7 +40,8 @@ label intro:
     kum "「来たな。現場はこの書斎だ。仏さんはもう運んだが、ほかはそのままにしてある」"
     hide bust
     hai "「相変わらず手回しのいいことで」"
-    sysc "◆コマンドで調査を進めよう。「調べる」で現場を、「話す」で聞き込みを。困ったら「考える」。"
+    if not persistent.cleared:
+        sysc "◆コマンドで調査を進めよう。「調べる」で現場を、「話す」で聞き込みを。困ったら「考える」。"
     jump roam
 
 ################################################################ 調査ループ
@@ -58,7 +62,7 @@ label menu_shosai:
         "調べる":
             call examine_shosai
         "話す（熊井警部）":
-            call think
+            call talk_kumai
         "移動する" if "unlockMove" in flg:
             call move_menu
         "考える":
@@ -86,7 +90,7 @@ label menu_dai:
         "調べる":
             call examine_dai
         "話す（熊井警部）":
-            call think
+            call talk_kumai
         "移動する":
             call move_menu
         "考える":
@@ -128,7 +132,7 @@ label examine_shosai:
             ("万年筆と原稿用紙" + chk("pen"), "pen"),
             ("ワープロ" + chk("wapro"), "wapro"),
             (("書棚" + chk("oubo")) if stage == "C" else "書棚", "shodana"),
-            ("窓", "mado"),
+            ("窓" + fchk("sMado"), "mado"),
         ]
         _t = pick(_opts)
     if _t == "isho":
@@ -228,6 +232,7 @@ label hs_drawer:
     return
 
 label hs_mado:
+    $ setf("sMado")
     "窓の鍵は、内側から掛かっている。窓の外は篠突く雨。"
     show bust kumai at bustpos
     kum "「出入りは廊下側の扉だけだ。鍵は掛かっていなかった」"
@@ -238,21 +243,25 @@ label hs_mado:
 
 label examine_ima:
     python:
-        _t = pick([("応接の卓", "taku"), ("窓", "mado")])
+        _t = pick([("応接の卓" + fchk("iTaku"), "taku"), ("窓" + fchk("iMado"), "mado")])
     if _t == "taku":
+        $ setf("iTaku")
         "湯呑が三つ。茶は、とうに冷めきっている。誰も口をつけた様子はない。"
     elif _t == "mado":
+        $ setf("iMado")
         "雨はまだ止まない。庭の灯籠が、ぼんやりと滲んで見えた。"
     return
 
 label examine_dai:
     python:
-        _t = pick([("流し（水切りカゴ）" + chk("sink"), "sink"), ("勝手口", "katte"), ("食器棚", "shokki")])
+        _t = pick([("流し（水切りカゴ）" + chk("sink"), "sink"), ("勝手口" + fchk("dKatte"), "katte"), ("食器棚" + fchk("dShokki"), "shokki")])
     if _t == "sink":
         call hs_sink
     elif _t == "katte":
+        $ setf("dKatte")
         "勝手口の鍵は、内側から掛かっている。……出入りした者は、玄関を通ったことになる。"
     elif _t == "shokki":
+        $ setf("dShokki")
         "客用のカップが行儀よく並んでいる。一客分、間が空いているように見えるのは――気のせいか。"
     return
 
@@ -280,7 +289,7 @@ label talk_ima:
     elif _p == "mizuhara":
         call talk_mizuhara
     elif _p == "kumai":
-        call think
+        call talk_kumai
     return
 
 label talk_kayoko:
@@ -290,7 +299,7 @@ label talk_kayoko:
         hide bust
         return
     python:
-        _t = pick([(fchk("k1") + "発見のとき", "a"), (fchk("k2") + "先生のこと", "b"), (fchk("k3") + "水原のこと", "c")])
+        _t = pick([("発見のとき" + fchk("k1"), "a"), ("先生のこと" + fchk("k2"), "b"), ("水原のこと" + fchk("k3"), "c")])
     if _t == "a":
         $ setf("k1")
         show bust kayoko at bustpos
@@ -325,7 +334,7 @@ label talk_tabuchi:
         hide bust
         return
     python:
-        _t = pick([(fchk("t1") + "あの夜のこと", "a"), (fchk("t2") + "新作のこと", "b")])
+        _t = pick([("あの夜のこと" + fchk("t1"), "a"), ("新作のこと" + fchk("t2"), "b")])
     if _t == "a":
         $ setf("t1")
         show bust tabuchi at bustpos
@@ -352,7 +361,7 @@ label talk_mizuhara:
         hide bust
         return
     python:
-        _t = pick([(fchk("m1") + "あの夜のこと", "a"), (fchk("m2") + "先生のこと", "b")])
+        _t = pick([("あの夜のこと" + fchk("m1"), "a"), ("先生のこと" + fchk("m2"), "b")])
     if _t == "a":
         $ setf("m1")
         show bust mizuhara at bustpos
@@ -374,36 +383,29 @@ label talk_mizuhara:
 
 label think:
     python:
+        _rest = remaining_tasks()
         if stage == "A":
-            _rest = []
-            if "isho" not in ev:
-                _rest.append("机の封筒")
-            if "cup" not in ev:
-                _rest.append("珈琲カップ")
-            if "pen" not in ev:
-                _rest.append("万年筆")
-            if "wapro" not in ev:
-                _rest.append("ワープロ")
             _hint = ("（まずは現場だ。……" + "、".join(_rest) + "。気になる物は全部見ておく）") if _rest else "（現場はあらかた見た。次だ）"
         elif stage == "B":
-            _rest = []
-            if not ("k1" in flg and "k2" in flg and "k3" in flg):
-                _rest.append("奥さんの話をもっと聞く")
-            if not ("t1" in flg and "t2" in flg):
-                _rest.append("編集者の田淵に当たる")
-            if not ("m1" in flg and "m2" in flg):
-                _rest.append("弟子の水原に当たる")
-            if "sink" not in ev:
-                _rest.append("台所も覗いておく")
             _hint = ("（……" + "。".join(_rest) + "。それからだ）") if _rest else "（材料は揃ったか。……熊井と整理するか）"
         else:
-            _rest = []
-            if "note" not in ev:
-                _rest.append("机の引き出し")
-            if "oubo" not in ev:
-                _rest.append("書棚の奥")
             _hint = ("（書斎だ。" + "と、".join(_rest) + "――熊井はそう言っていた）") if _rest else "（……役者は揃った）"
     hai "[_hint]"
+    return
+
+## 熊井警部との会話（ヒントを警部の言葉で）
+label talk_kumai:
+    python:
+        _rest = remaining_tasks()
+        if stage == "A":
+            _kh = ("「まずは現場だ。……" + "、".join(_rest) + "。気になる物は、全部見ておけ」") if _rest else "「現場はあらかた見たな。……家の者の話を聞きに行くか」"
+        elif stage == "B":
+            _kh = ("「焦るな。……" + "。".join(_rest) + "。話はそれからだ」") if _rest else "「材料は揃ったようだな。……そろそろ、整理といくか」"
+        else:
+            _kh = ("「" + "と、".join(_rest) + "。さっき言ったろう、見落とすなよ」") if _rest else "「……役者は揃ったな」"
+    show bust kumai at bustpos
+    kum "[_kh]"
+    hide bust
     return
 
 ################################################################ 進行トリガー
@@ -438,6 +440,7 @@ label check_triggers:
 ################################################################ 中間推理（推理クイズ）
 
 label quiz:
+    $ quiz_miss = 0
     show bust kumai at bustpos
     kum "「灰崎、そろそろ整理といこう。……署の連中は、自殺で上げる気でいる」"
     kum "「遺書はある。毒も即効性。書斎の窓は内鍵、出入りは廊下の扉だけ。家には身内しかいない」"
@@ -445,20 +448,29 @@ label quiz:
     hide bust
 
 label quiz_pick:
-    $ _eid = renpy.call_screen("notebook", select=True, prompt="「自殺」と食い違う証拠は？")
+    $ _eid = renpy.call_screen("notebook", select=True, prompt="「自殺」と食い違う証拠は？", cancel="考え直す")
     if _eid == "isho":
         jump quiz_isho
+    elif _eid == "memo_k" or _eid == "memo_t":
+        show bust kumai at bustpos
+        kum "「いい線だ。証言は揃ってる。……だがな、出すべきは“その証言が刺さる物”のほうだ」"
+        kum "「机の上にあったろう。佳代子さんの話と、突き合わせてみろ」"
+        hide bust
+        call quiz_more_hint
+        jump quiz_pick
     elif _eid == "wapro":
         show bust kumai at bustpos
         kum "「惜しいな。それと『組み合わせて』初めて引っかかる物が、手帳にあるだろう」"
         hide bust
+        call quiz_more_hint
         jump quiz_pick
     elif _eid == "pen":
         show bust kumai at bustpos
         kum "「万年筆か。……悪くない筋だが、まず大本命があるだろう」"
         hide bust
+        call quiz_more_hint
         jump quiz_pick
-    elif _eid is None:
+    elif _eid == "__cancel__":
         show bust kumai at bustpos
         kum "「逃げるなよ、灰崎。お前の手帳の中だ」"
         hide bust
@@ -467,7 +479,17 @@ label quiz_pick:
         show bust kumai at bustpos
         kum "「……それは別に、食い違っちゃおらんだろう」"
         hide bust
+        call quiz_more_hint
         jump quiz_pick
+
+## 誤答が続いたらヒントを濃くする
+label quiz_more_hint:
+    $ quiz_miss += 1
+    if quiz_miss == 3:
+        show bust kumai at bustpos
+        kum "「……機械嫌いの男と、活字の遺書。並べてみろ。答えはお前の手帳の中だ」"
+        hide bust
+    return
 
 label quiz_isho:
     show bust kumai at bustpos
